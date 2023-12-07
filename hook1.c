@@ -30,6 +30,7 @@ void gethooks(char ***names, void ***funcs, int *len)
 __attribute__((constructor))
 void on_load(void)
 {
+    if(hookfuncs) return;
     printf("lib load\n");
     hookfuncs = calloc(1,sizeof(hooknames)/sizeof(hooknames[0])*sizeof(void*));
     if(!hookfuncs)  printf("lib load err\n");

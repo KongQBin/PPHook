@@ -6,6 +6,7 @@ FILE *debugfp = NULL;
 __attribute__((constructor))
 void on_load(void)
 {
+    if(debugfp) return;
     debugfp = fopen("/tmp/zyhook.log","a+");
     if(!debugfp)    printf("debugfp init error #%d : %s\n",errno,strerror(errno));
 }
@@ -24,7 +25,11 @@ void **funcs = NULL;
 int len = 0;
 static inline void *getfuncptr(const char* name)
 {
-    if(!inited) gethooks(&names,&funcs,&len);
+    if(!inited)
+    {
+        gethooks(&names,&funcs,&len);
+        inited = 1;
+    }
     for(int i = 0; i < len; ++i)
     {
         if(!strncmp(names[i],name,strlen(name)))
@@ -33,15 +38,15 @@ static inline void *getfuncptr(const char* name)
     return NULL;
 }
 
-int unlink(const char *path)
-{
-    mprintf("unlink %s\n",path);
-    int(*munlink)(const char*) = getfuncptr("unlink");
-    if(munlink)
-        return munlink(path);
-    else
-        return -1;
-}
+//int unlink(const char *path)
+//{
+//    mprintf("unlink %s\n",path);
+//    int(*munlink)(const char*) = getfuncptr("unlink");
+//    if(munlink)
+//        return munlink(path);
+//    else
+//        return -1;
+//}
 
 int close(int fd)
 {
