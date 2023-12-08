@@ -2,6 +2,10 @@
 
 int main()
 {
+    int(*mclose)(int) = dlsym(REAL_LIBC, "close");
+    if(mclose)  {printf("AAAAAAAAAAA\n");mclose(1);}
+    return 0;
+
     char **names = NULL;
     void **funcs = NULL;
     int len = 0;
