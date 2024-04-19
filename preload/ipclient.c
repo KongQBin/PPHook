@@ -1,6 +1,6 @@
 #include "ipclient.h"
 static int gClientSocket = -1;
-GlobalConfig *gConfig = NULL;
+static GlobalConfig *gConfig = NULL;
 // 该函数不负责创建内存
 int initMmap() {
     int ret = 0, fd = -1;
@@ -16,29 +16,32 @@ int initMmap() {
             break;
         }
         // 建立映射
-        gConfig = mmap(NULL, sizeof(GlobalConfig), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+        gConfig = mmap(NULL, sizeof(GlobalConfig), PROT_READ, MAP_SHARED, fd, 0);
         if(!gConfig)
         {
             ret = -2;
             break;
         }
-
     }while(0);
-    if(fd >= 0) close(fd);
+    if(fd >= 0 && real_close)
+        real_close(fd);         // 切忌使用close，会造成死循环
     return ret;
 }
 
 int getFileMonitor()
 {
-    return gConfig ? gConfig->fileMonitor : (initMmap() ? 0 : gConfig->fileMonitor);
+    return gConfig ? gConfig->fileMonitor :
+               (initMmap() ? 0 : gConfig->fileMonitor);
 }
 int getActiveDefense()
 {
-    return gConfig ? gConfig->activeDefense : (initMmap() ? 0 : gConfig->activeDefense);
+    return gConfig ? gConfig->activeDefense :
+               (initMmap() ? 0 : gConfig->activeDefense);
 }
 int getProcessProtect()
 {
-    return gConfig ? gConfig->processProtect : (initMmap() ? 0 : gConfig->processProtect);
+    return gConfig ? gConfig->processProtect :
+               (initMmap() ? 0 : gConfig->processProtect);
 }
 
 int unInitIpc()
@@ -49,8 +52,9 @@ int unInitIpc()
         real_close(gClientSocket);
         gClientSocket = -1;
     }
-    // 顺便共享内存取消映射
-    munmap(gConfig, sizeof(GlobalConfig));
+//    // 顺便共享内存取消映射
+//    munmap(gConfig, sizeof(GlobalConfig));
+//    gConfig = NULL;
     return 0;
 }
 int initIpc() {

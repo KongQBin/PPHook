@@ -42,6 +42,16 @@ int TaskOpt::init()
             ret = -1;
             break;
         }
+        GlobalConfig cfg;
+        cfg.fileMonitor = 1;
+        cfg.activeDefense = 1;
+        cfg.processProtect = 1;
+        if(m_ipcSvr->setGlobalConfig(&cfg))
+        {
+            printf("setGlobalConfig fail\n");
+            ret = -1;
+            break;
+        }
         m_answerThreadRun = true;
         ZyThread::autoRun(bind(&TaskOpt::answerThread,this));
     }while(0);

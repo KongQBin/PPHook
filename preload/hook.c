@@ -78,25 +78,31 @@ int initRenameAtMsg(int __oldfd, const char *__old, int __newfd,
         strncat(msg->data.fmd.filepath,__old,sizeof(msg->data.fmd.filepath)-strlen(msg->data.fmd.filepath)-1);
         strncat(msg->data.fmd.filepath2,"/",sizeof(msg->data.fmd.filepath2)-strlen(msg->data.fmd.filepath2)-1);
         strncat(msg->data.fmd.filepath2,__new,sizeof(msg->data.fmd.filepath2)-strlen(msg->data.fmd.filepath2)-1);
+        realPath(msg->data.fmd.filepath,sizeof(msg->data.fmd.filepath));
+        realPath(msg->data.fmd.filepath2,sizeof(msg->data.fmd.filepath2));
     }
     return 0;
 }
 
 NHOOK_EXPORT long rename (const char *__old, const char *__new)
 {
-    MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
-    if(msg)
+    do
     {
-        strncat(msg->funcname,"rename",sizeof(msg->funcname)-1);
-        msg->type = M_FILE_MONITOR;
-        snprintf(msg->data.fmd.filepath,sizeof(msg->data.fmd.filepath)-1,__old);
-        snprintf(msg->data.fmd.filepath2,sizeof(msg->data.fmd.filepath2)-1,__new);
-        sendMsg(msg);
-        free(msg);
-    }
-//    char buf[1024] = {0};
-//    snprintf(buf,sizeof(buf)-1,"move %s to %s\n",__old,__new);
-//    nhookputlog("rename",buf);
+        if(uptime()) break;
+        if(!getFileMonitor()) break;
+        MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
+        if(msg)
+        {
+            strncat(msg->funcname,"rename",sizeof(msg->funcname)-1);
+            msg->type = M_FILE_MONITOR;
+            snprintf(msg->data.fmd.filepath,sizeof(msg->data.fmd.filepath)-1,__old);
+            snprintf(msg->data.fmd.filepath2,sizeof(msg->data.fmd.filepath2)-1,__new);
+            realPath(msg->data.fmd.filepath,sizeof(msg->data.fmd.filepath));
+            realPath(msg->data.fmd.filepath2,sizeof(msg->data.fmd.filepath2));
+            sendMsg(msg);
+            free(msg);
+        }
+    }while(0);
     return real_rename ? real_rename(__old,__new) : FUNC_IS_NOT_FOUND;
 }
 
@@ -107,6 +113,7 @@ NHOOK_EXPORT long renameat (int __oldfd, const char *__old, int __newfd,
     do
     {
         if(uptime()) break;
+        if(!getFileMonitor()) break;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
         if(msg)
         {
@@ -116,9 +123,6 @@ NHOOK_EXPORT long renameat (int __oldfd, const char *__old, int __newfd,
             free(msg);
         }
     }while(0);
-//    char buf[1024] = {0};
-//    snprintf(buf,sizeof(buf)-1,"move %s to %s\n",__old,__new);
-//    nhookputlog("renameat",buf);
     return real_renameat ? real_renameat(__oldfd,__old,__newfd,__new) : FUNC_IS_NOT_FOUND;
 }
 
@@ -130,6 +134,7 @@ NHOOK_EXPORT long renameat2 (int __oldfd, const char *__old, int __newfd,
     // 此处不关注__flags
     do{
         if(uptime()) break;
+        if(!getFileMonitor()) break;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
         if(msg)
         {
@@ -139,19 +144,11 @@ NHOOK_EXPORT long renameat2 (int __oldfd, const char *__old, int __newfd,
             free(msg);
         }
     }while(0);
-
-//    char buf[1024] = {0};
-//    snprintf(buf,sizeof(buf)-1,"move %s to %s\n",__old,__new);
-//    nhookputlog("renameat2",buf);
     return real_renameat2 ? real_renameat2(__oldfd,__old,__newfd,__new,__flags) : FUNC_IS_NOT_FOUND;
 }
 
 NHOOK_EXPORT long open(const char *path, int oflag, mode_t mode)
 {
-//    char buf[1024] = {0};
-//    snprintf(buf,sizeof(buf)-1,"%s %s \n",(real_open64 ? "open64" : "open"), path);
-//    nhookputlog("open",buf);
-
     return real_open ? real_open(path,oflag,mode) : FUNC_IS_NOT_FOUND;
 }
 
@@ -170,6 +167,7 @@ NHOOK_EXPORT long close(int __fd)
     do
     {
         if(uptime()) break;
+        if(!getFileMonitor()) break;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
         if(msg)
         {
@@ -179,6 +177,7 @@ NHOOK_EXPORT long close(int __fd)
             getFdPath(&path,&pathLen,__fd);
             msg->type = M_FILE_MONITOR;
             snprintf(msg->data.fmd.filepath,sizeof(msg->data.fmd.filepath)-1,path);
+            realPath(msg->data.fmd.filepath,sizeof(msg->data.fmd.filepath));
             sendMsg(msg);
             free(msg);
         }
@@ -191,12 +190,14 @@ NHOOK_EXPORT long execve(const char *__path, char *const __argv[], char *const _
 {
     do{
         if(uptime()) break;
+        if(!getActiveDefense()) break;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
         if(msg)
         {
             strncat(msg->funcname,"execve",sizeof(msg->funcname)-1);
             msg->type = M_ACTIVE_DEFENSE;
             snprintf(msg->data.add.exepath,sizeof(msg->data.add.exepath)-1,__path);
+            realPath(msg->data.add.exepath,sizeof(msg->data.add.exepath));
             sendMsg(msg);
             free(msg);
         }
@@ -208,6 +209,7 @@ NHOOK_EXPORT long execveat(int __fd, const char *__path, char *const __argv[], c
 {
     do{
         if(uptime()) break;
+        if(!getActiveDefense()) break;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
         if(msg)
         {
@@ -238,16 +240,19 @@ NHOOK_EXPORT long execveat(int __fd, const char *__path, char *const __argv[], c
                 strncat(msg->data.add.exepath,"/",sizeof(msg->data.add.exepath)-strlen(msg->data.add.exepath)-1);
             }
             strncat(msg->data.add.exepath,__path,sizeof(msg->data.add.exepath)-strlen(msg->data.add.exepath)-1);
+            realPath(msg->data.add.exepath,sizeof(msg->data.add.exepath));
             sendMsg(msg);
             free(msg);
         }
     }while(0);
     return real_execveat ? real_execveat(__fd,__path,__argv,__envp,__flags) : FUNC_IS_NOT_FOUND;
 }
+
 NHOOK_EXPORT long fexecve(int __fd, char *const __argv[], char *const __envp[])
 {
     do{
         if(uptime()) break;
+        if(!getActiveDefense()) break;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
         if(msg)
         {
@@ -259,6 +264,7 @@ NHOOK_EXPORT long fexecve(int __fd, char *const __argv[], char *const __envp[])
             if(fdPath)
             {
                 snprintf(msg->data.add.exepath,sizeof(msg->data.add.exepath)-1,fdPath);
+                realPath(msg->data.add.exepath,sizeof(msg->data.add.exepath));
                 free(fdPath);
             }
             sendMsg(msg);
@@ -273,6 +279,7 @@ NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const
     do
     {
         if(uptime()) break;
+        if(!getActiveDefense()) break;
         if(!real_open || !real_close) break;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
         if(msg)
@@ -295,6 +302,7 @@ NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const
             strncat(msg->funcname,"init_module",sizeof(msg->funcname)-1);
             msg->type = M_ACTIVE_DEFENSE;
             snprintf(msg->data.add.exepath,sizeof(msg->data.add.exepath)-1,tmpKoPath);
+            realPath(msg->data.add.exepath,sizeof(msg->data.add.exepath));
             sendMsg(msg);
             free(msg);
         }
@@ -307,12 +315,14 @@ NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
     do
     {
         if(uptime()) break;
+        if(!getActiveDefense()) break;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
         if(msg)
         {
             strncat(msg->funcname,"delete_module",sizeof(msg->funcname)-1);
             msg->type = M_ACTIVE_DEFENSE;
             snprintf(msg->data.add.exepath,sizeof(msg->data.add.exepath)-1,name_user);
+            realPath(msg->data.add.exepath,sizeof(msg->data.add.exepath));
             free(msg);
         }
     }while(0);

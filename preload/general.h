@@ -5,6 +5,7 @@
 #include "munistd.h"
 
 extern int gLogFd;
+int realPath(char *path, size_t maxLen);
 int getCwd(char **cwd, size_t *len);
 int getExe(char **exe, size_t *len);
 int getFdPath(char **path, size_t *len, int fd);

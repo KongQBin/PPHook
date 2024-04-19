@@ -49,3 +49,16 @@ void nhookputlog(const char *funcName,const char *msg)
     if(gLogFd >=0 && !strstr(funcName,"close")) write(gLogFd,buf,strlen(buf));
     if(exe) free(exe);
 }
+
+int realPath(char *path, size_t maxLen)
+{
+    int ret = 0;
+    char *resolved = realpath(path, NULL);
+    if (resolved) {
+        snprintf(path,maxLen-1,"%s",resolved);
+        free(resolved); // 释放动态分配的内存
+    } else {
+        ret = -1;
+    }
+    return ret;
+}

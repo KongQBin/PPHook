@@ -54,10 +54,16 @@ int IPCServer::init(CallBackFunc func)
             ret = -3;
             break;
         }
+        // 初始化共享内存
+        if(initMmap())
+        {
+            ret = -4;
+            break;
+        }
         // 初始化套接字连接
         if(initSocket())
         {
-            ret = -4;
+            ret = -5;
             break;
         }
         // 启动事件处理线程
@@ -75,6 +81,8 @@ int IPCServer::unInit()
     freeMems();
     if(access(SOCKET_PATH,F_OK) == 0)
         unlink(SOCKET_PATH);
+    memset(m_config,0,sizeof(GlobalConfig));
+    munmap(m_config,sizeof(GlobalConfig));
     return 0;
 }
 
@@ -210,12 +218,14 @@ int IPCServer::initMmap()
             break;
         }
         // 建立映射
-        m_config = mmap(NULL, sizeof(GlobalConfig), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+        m_config = (GlobalConfig*)mmap(NULL, sizeof(GlobalConfig), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
         if(!m_config)
         {
             ret = -3;
             break;
         }
+        // 清空内存
+        memset(m_config,0,sizeof(GlobalConfig));
 
     }while(0);
     if(fd >= 0)
