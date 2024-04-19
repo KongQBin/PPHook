@@ -1,12 +1,16 @@
-project(ProloadHook)
-cmake_minimum_required(VERSION 3.5)
-set(CMAKE_C_FLAGS "-std=gnu99")
-add_library(hook1 SHARED hook1.c)
+project(PLHOOK)
+cmake_minimum_required(VERSION 2.8.12)
+include_directories(
+    ./
+    )
+set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_BUILD_TYPE "Debug")
+add_subdirectory(preload)
+add_subdirectory(monipc)
+add_subdirectory(testipc)
+add_subdirectory(testdm)
 
-link_libraries(hook1)
-add_library(hook2 SHARED hook2.c)
-add_dependencies(hook2 hook1)
 
-link_libraries(hook1)
-add_executable(test main.c)
-add_dependencies(test hook1)

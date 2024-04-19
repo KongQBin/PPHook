@@ -1,2 +1,0 @@
-# PPHook
-PerfectProloadHook利用proload的系统监控方法
