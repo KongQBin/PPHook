@@ -2,6 +2,14 @@
 // 屏蔽类型检查警告
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wint-conversion"
+
+#define CaseSysno(callname,...) \
+case __NR_##callname:\
+{\
+    ret = callname(__VA_ARGS__);\
+    break;\
+}
+
 void nhookputlog(const char *funcName,const char *msg);
 static pthread_mutex_t defaultMutex = PTHREAD_MUTEX_INITIALIZER;
 long syscall(long int __sysno, ...)
@@ -15,42 +23,20 @@ long syscall(long int __sysno, ...)
 
     switch (__sysno) {
 #if defined(__x86_64__)
-    case __NR_open:
-    {
-        ret = open(argv[0],argv[1],argv[2]);
-        break;
-    }
-    case __NR_rename:
-    {
-        ret = rename(argv[0],argv[1]);
-        break;
-    }
+        CaseSysno(open,argv[0],argv[1],argv[2]);
+        CaseSysno(rename,argv[0],argv[1]);
 #endif
-    case __NR_close:
-    {
-        ret = close(argv[0]);
-        break;
-    }
-    case __NR_renameat:
-    {
-        ret = renameat(argv[0],argv[1],argv[2],argv[3]);
-        break;
-    }
-    case __NR_renameat2:
-    {
-        ret = renameat2(argv[0],argv[1],argv[2],argv[3],argv[4]);
-        break;
-    }
-    case __NR_execve:
-    {
-        ret = execve(argv[0],argv[1],argv[2]);
-        break;
-    }
-    case __NR_execveat:
-    {
-        ret = execveat(argv[0],argv[1],argv[2],argv[3],argv[4]);
-        break;
-    }
+        CaseSysno(openat,argv[0],argv[1],argv[2],argv[3]);
+        CaseSysno(unlink,argv[0]);
+        CaseSysno(unlinkat,argv[0],argv[1],argv[2]);
+        CaseSysno(close,argv[0]);
+        CaseSysno(renameat,argv[0],argv[1],argv[2],argv[3]);
+        CaseSysno(renameat2,argv[0],argv[1],argv[2],argv[3],argv[4]);
+        CaseSysno(execve,argv[0],argv[1],argv[2]);
+        CaseSysno(execveat,argv[0],argv[1],argv[2],argv[3],argv[4]);
+        CaseSysno(init_module,argv[0],argv[1],argv[2],argv[3]);
+        CaseSysno(finit_module,argv[0],argv[1],argv[2]);
+        CaseSysno(delete_module,argv[0],argv[1]);
     default:
     {
         toSysCall = 1;
@@ -59,7 +45,7 @@ long syscall(long int __sysno, ...)
     }
     // 如果未查询到对应的符号，则以上调用会返回-99
     // 此时消息已经发送完毕，使用syscall函数来处理这些调用
-    if(ret == FUNC_IS_NOT_FOUND) toSysCall =1;
+    if(ret == SYMBOL_IS_NOT_FOUND_IN_LIBC) toSysCall = 1;
     if(toSysCall)
     {
         /*

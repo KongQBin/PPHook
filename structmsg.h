@@ -13,7 +13,7 @@ typedef struct _FileMonitorData
 } FileMonitorData;
 typedef struct _ActiveDefenseData
 {
-    char exepath[4096];     // 可执行文件路径
+    char filepath[4096];     // 可执行文件路径
 } ActiveDefenseData;
 typedef struct _ProcessProtectData
 {

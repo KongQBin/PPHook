@@ -70,7 +70,7 @@ int TaskOpt::MsgCallBack(MonitorMsg *msg)
         break;
     case M_ACTIVE_DEFENSE:
         m_taskPV.signal();
-        printf("pid = %ld,\ttid = %ld,\tfunc = %s,\texe = %s\n",tmp.pid,tmp.tid,tmp.funcname,tmp.data.add.exepath);
+        printf("pid = %ld,\ttid = %ld,\tfunc = %s,\texe = %s\n",tmp.pid,tmp.tid,tmp.funcname,tmp.data.add.filepath);
         break;
     case M_PROCESS_PROTECT:
         m_taskPV.signal();
