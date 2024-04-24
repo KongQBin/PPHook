@@ -37,6 +37,7 @@ long syscall(long int __sysno, ...)
         CaseSysno(init_module,argv[0],argv[1],argv[2],argv[3]);
         CaseSysno(finit_module,argv[0],argv[1],argv[2]);
         CaseSysno(delete_module,argv[0],argv[1]);
+        CaseSysno(kill,argv[0],argv[1]);
     default:
     {
         toSysCall = 1;

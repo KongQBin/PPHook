@@ -377,3 +377,30 @@ NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
     return real_delete_module ? real_delete_module(name_user,flags) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
 
+NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
+{
+    do
+    {
+        if(uptime()) break;
+        if(!__sig) break;
+        if(!getActiveDefense()) break;
+        MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
+        if(msg)
+        {
+            msg->type = M_ACTIVE_DEFENSE;
+            strncat(msg->funcname,"kill",sizeof(msg->funcname)-1);
+            char *exe = NULL;
+            size_t exeLen = 0;
+            getExe(&exe,&exeLen,__pid);
+            if(exe)
+            {
+                snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,exe);
+                free(exe);
+            }
+            sendMsg(msg);
+            free(msg);
+        }
+    }while(0);
+    return real_kill ? real_kill(__pid,__sig) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+}
+

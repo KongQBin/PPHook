@@ -40,9 +40,11 @@ extern long unlink (const char *__name);
 extern long unlinkat (int __fd, const char *__name, int __flag);
 extern long execveat(int __fd, const char *__path, char *const __argv[], char *const __envp[], int __flags);
 extern long execve(const char *__path, char *const __argv[], char *const __envp[]);
+extern long fexecve(int __fd, char *const __argv[], char *const __envp[]);
 extern long init_module(const void *module_image, unsigned long len, const char *param_values, const struct module *mod);
 extern long finit_module(int fd, const char *param_values,int flags);
 extern long delete_module(const char *name_user, unsigned int flags);
+extern long kill(__pid_t __pid, int __sig);
 #pragma GCC diagnostic pop
 
 

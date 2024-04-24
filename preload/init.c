@@ -35,6 +35,7 @@ __attribute ((constructor)) void plInit(void)
         INIT_PTR(long,finit_module,(int fd, const char *param_values,int flags));
         INIT_PTR(long,init_module,(const void *module_image, unsigned long len, const char *param_values, const struct module *mod));
         INIT_PTR(long,delete_module,(const char *name_user, unsigned int flags));
+        INIT_PTR(long,kill,(__pid_t __pid, int __sig));
         // syscall 比较特殊，获取不到地址或者拿获取到的地址进行调用会段错误
         // 它是由LIBC进行特殊处理的
         INIT_PTR(long, syscall,(long int __sysno, ...));
