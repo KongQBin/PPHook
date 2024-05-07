@@ -37,7 +37,7 @@ private:
     epoll_event_t m_event;
     epoll_event_t *m_events;
     MonitorMsg *m_msg;
-    map<int,long> m_map;
+    map<long,long> m_map;
     mutex m_mapMutex;
     GlobalConfig *m_config;
 };

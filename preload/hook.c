@@ -96,6 +96,8 @@ NHOOK_EXPORT long renameat2 (int __oldfd, const char *__old, int __newfd,
 
 NHOOK_EXPORT long open(const char *path, int oflag, mode_t mode)
 {
+    ControlMsg cmsg;
+    cmsg.dec = D_ALLOW;
     do
     {
         if(!path) break;
@@ -106,10 +108,16 @@ NHOOK_EXPORT long open(const char *path, int oflag, mode_t mode)
         {
             initOpenMsg(AT_FDCWD,path,msg);
             strncat(msg->funcname,"open",sizeof(msg->funcname)-1);
-            sendMsg(msg);
+            if(!sendMsg(msg))
+                recvMsg(&cmsg);
             free(msg);
         }
     }while(0);
+    if(cmsg.dec == D_DENIAL)
+    {
+        errno = EPERM;  // 无权限
+        return -1;
+    }
     return real_open ? real_open(path,oflag,mode) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
 
@@ -120,6 +128,8 @@ NHOOK_EXPORT long open64(const char *path, int oflag, mode_t mode)
      * 在64位系统上，open 和 open64 通常是等价的，因为64位系统本身就支持大文件处理。
      * 而在32位系统上，open64 用于明确地要求大文件支持
      */
+    ControlMsg cmsg;
+    cmsg.dec = D_ALLOW;
     do
     {
         if(!path) break;
@@ -130,15 +140,23 @@ NHOOK_EXPORT long open64(const char *path, int oflag, mode_t mode)
         {
             initOpenMsg(AT_FDCWD,path,msg);
             strncat(msg->funcname,"open64",sizeof(msg->funcname)-1);
-            sendMsg(msg);
+            if(!sendMsg(msg))
+                recvMsg(&cmsg);
             free(msg);
         }
     }while(0);
+    if(cmsg.dec == D_DENIAL)
+    {
+        errno = EPERM;  // 无权限
+        return -1;
+    }
     return real_open64 ? real_open64(path,oflag,mode) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
 
 NHOOK_EXPORT long openat(int __fd, const char *__file, int __oflag, .../*mode_t*/)
 {
+    ControlMsg cmsg;
+    cmsg.dec = D_ALLOW;
     mode_t mode;
     va_list va_args;
     va_start(va_args,__oflag);
@@ -153,14 +171,17 @@ NHOOK_EXPORT long openat(int __fd, const char *__file, int __oflag, .../*mode_t*
         {
             initOpenMsg(__fd,__file,msg);
             strncat(msg->funcname,"openat",sizeof(msg->funcname)-1);
-            sendMsg(msg);
+            if(!sendMsg(msg))
+                recvMsg(&cmsg);
             free(msg);
         }
     }while(0);
-    if(__oflag & O_CREAT)
-        return real_openat ? real_openat(__fd,__file,__oflag,mode) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
-    else
-        return real_openat ? real_openat(__fd,__file,__oflag) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    if(cmsg.dec == D_DENIAL)
+    {
+        errno = EPERM;  // 无权限
+        return -1;
+    }
+    return real_openat ? real_openat(__fd,__file,__oflag,mode) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
 
 NHOOK_EXPORT long close(int __fd)
@@ -181,7 +202,8 @@ NHOOK_EXPORT long close(int __fd)
             {
                 snprintf(msg->data.fmd.filepath,sizeof(msg->data.fmd.filepath)-1,path);
                 realPath(msg->data.fmd.filepath,sizeof(msg->data.fmd.filepath));
-                sendMsg(msg);
+                if(msg->data.fmd.filepath[0] == '/')
+                    sendMsg(msg);
                 free(path);
             }
             free(msg);
@@ -192,6 +214,8 @@ NHOOK_EXPORT long close(int __fd)
 
 NHOOK_EXPORT long unlink(const char *__name)
 {
+    ControlMsg cmsg;
+    cmsg.dec = D_ALLOW;
     do
     {
         if(!__name) break;
@@ -202,15 +226,23 @@ NHOOK_EXPORT long unlink(const char *__name)
         {
             initUnlinkMsg(AT_FDCWD,__name,msg);
             strncat(msg->funcname,"unlink",sizeof(msg->funcname)-1);
-            sendMsg(msg);
+            if(!sendMsg(msg))
+                recvMsg(&cmsg);
             free(msg);
         }
     }while(0);
+    if(cmsg.dec == D_DENIAL)
+    {
+        errno = EPERM;  // 无权限
+        return -1;
+    }
     return real_unlink ? real_unlink(__name) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
 
 NHOOK_EXPORT long unlinkat(int __fd, const char *__name, int __flag)
 {
+    ControlMsg cmsg;
+    cmsg.dec = D_ALLOW;
     do
     {
         if(!__name) break;
@@ -221,15 +253,23 @@ NHOOK_EXPORT long unlinkat(int __fd, const char *__name, int __flag)
         {
             initUnlinkMsg(__fd,__name,msg);
             strncat(msg->funcname,"unlinkat",sizeof(msg->funcname)-1);
-            sendMsg(msg);
+            if(!sendMsg(msg))
+                recvMsg(&cmsg);
             free(msg);
         }
     }while(0);
+    if(cmsg.dec == D_DENIAL)
+    {
+        errno = EPERM;  // 无权限
+        return -1;
+    }
     return real_unlinkat ? real_unlinkat(__fd,__name,__flag) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
 
 NHOOK_EXPORT long execve(const char *__path, char *const __argv[], char *const __envp[])
 {
+    ControlMsg cmsg;
+    cmsg.dec = D_ALLOW;
     do
     {
         if(!__path) break;
@@ -240,15 +280,25 @@ NHOOK_EXPORT long execve(const char *__path, char *const __argv[], char *const _
         {
             initExecveMsg(AT_FDCWD,__path,msg);
             strncat(msg->funcname,"execve",sizeof(msg->funcname)-1);
-            sendMsg(msg);
+            int sret = sendMsg(msg);
+//            printf("sret = %d\n",sret);
+            if(!sret)
+                recvMsg(&cmsg);
             free(msg);
         }
     }while(0);
+    if(cmsg.dec == D_DENIAL)
+    {
+        errno = EPERM;  // 无权限
+        return -1;
+    }
     return real_execve ? real_execve(__path,(char *const*)__argv,(char *const*)__envp) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
 
 NHOOK_EXPORT long execveat(int __fd, const char *__path, char *const __argv[], char *const __envp[], int __flags)
 {
+    ControlMsg cmsg;
+    cmsg.dec = D_ALLOW;
     do
     {
         if(!__path) break;
@@ -259,15 +309,23 @@ NHOOK_EXPORT long execveat(int __fd, const char *__path, char *const __argv[], c
         {
             initExecveMsg(__fd,__path,msg);
             strncat(msg->funcname,"execveat",sizeof(msg->funcname)-1);
-            sendMsg(msg);
+            if(!sendMsg(msg))
+                recvMsg(&cmsg);
             free(msg);
         }
     }while(0);
+    if(cmsg.dec == D_DENIAL)
+    {
+        errno = EPERM;  // 无权限
+        return -1;
+    }
     return real_execveat ? real_execveat(__fd,__path,__argv,__envp,__flags) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
 
 NHOOK_EXPORT long fexecve(int __fd, char *const __argv[], char *const __envp[])
 {
+    ControlMsg cmsg;
+    cmsg.dec = D_ALLOW;
     do{
         if(uptime()) break;
         if(!getActiveDefense()) break;
@@ -285,15 +343,23 @@ NHOOK_EXPORT long fexecve(int __fd, char *const __argv[], char *const __envp[])
                 realPath(msg->data.add.filepath,sizeof(msg->data.add.filepath));
                 free(fdPath);
             }
-            sendMsg(msg);
+            if(!sendMsg(msg))
+                recvMsg(&cmsg);
             free(msg);
         }
     }while(0);
+    if(cmsg.dec == D_DENIAL)
+    {
+        errno = EPERM;  // 无权限
+        return -1;
+    }
     return real_fexecve ? real_fexecve(__fd,__argv,__envp) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
 
 NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const char *param_values, const struct module *mod)
 {
+    ControlMsg cmsg;
+    cmsg.dec = D_ALLOW;
     do
     {
         if(uptime()) break;
@@ -322,15 +388,23 @@ NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const
             // 消息构建
             snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,tmpKoPath);
             realPath(msg->data.add.filepath,sizeof(msg->data.add.filepath));
-            sendMsg(msg);
+            if(!sendMsg(msg))
+                recvMsg(&cmsg);
             free(msg);
         }
     }while(0);
+    if(cmsg.dec == D_DENIAL)
+    {
+        errno = EPERM;  // 无权限
+        return -1;
+    }
     return real_init_module ? real_init_module(module_image,len,param_values,mod) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
 
 NHOOK_EXPORT long finit_module(int fd, const char *param_values,int flags)
 {
+    ControlMsg cmsg;
+    cmsg.dec = D_ALLOW;
     do
     {
         if(uptime()) break;
@@ -347,17 +421,25 @@ NHOOK_EXPORT long finit_module(int fd, const char *param_values,int flags)
             {
                 snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,path);
                 realPath(msg->data.add.filepath,sizeof(msg->data.add.filepath));
-                sendMsg(msg);
                 free(path);
+                if(!sendMsg(msg))
+                    recvMsg(&cmsg);
             }
             free(msg);
         }
     }while(0);
+    if(cmsg.dec == D_DENIAL)
+    {
+        errno = EPERM;  // 无权限
+        return -1;
+    }
     return real_finit_module ? real_finit_module(fd,param_values,flags) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
 
 NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
 {
+    ControlMsg cmsg;
+    cmsg.dec = D_ALLOW;
     do
     {
         if(uptime()) break;
@@ -370,15 +452,23 @@ NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
             strncat(msg->funcname,"delete_module",sizeof(msg->funcname)-1);
             snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,name_user);
             realPath(msg->data.add.filepath,sizeof(msg->data.add.filepath));
-            sendMsg(msg);
+            if(!sendMsg(msg))
+                recvMsg(&cmsg);
             free(msg);
         }
     }while(0);
+    if(cmsg.dec == D_DENIAL)
+    {
+        errno = EPERM;  // 无权限
+        return -1;
+    }
     return real_delete_module ? real_delete_module(name_user,flags) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
 
 NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
 {
+    ControlMsg cmsg;
+    cmsg.dec = D_ALLOW;
     do
     {
         if(uptime()) break;
@@ -397,10 +487,16 @@ NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
                 snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,exe);
                 free(exe);
             }
-            sendMsg(msg);
+            if(!sendMsg(msg))
+                recvMsg(&cmsg);
             free(msg);
         }
     }while(0);
+    if(cmsg.dec == D_DENIAL)
+    {
+        errno = EPERM;  // 无权限
+        return -1;
+    }
     return real_kill ? real_kill(__pid,__sig) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
 

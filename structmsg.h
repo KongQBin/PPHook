@@ -1,4 +1,21 @@
 #pragma once
+//// 后期适配策略用，临时注释
+//typedef enum _MonitorPoint
+//{
+//    MP_OPEN,
+//    MP_CLOSE,
+//    MP_RENAME,
+//    MP_UNLINK,
+//    MP_EXECVE,
+//    MP_KILL,
+//    MP_MAXVAL,  // 最大值
+//} MonitorPoint;
+//typedef struct _MonitorPointCfg
+//{
+//    int cfg[MP_MAXVAL];
+//#define BLOCK       (1 << 0)            // 对应的调用执行前是否需要阻塞
+//#define ENDMSG      (1 << 1)            // 在调用结束后是否再次通知调用结果
+//} MonitorPointCfg;
 
 typedef enum _MonitorType
 {
@@ -14,6 +31,8 @@ typedef struct _FileMonitorData
 typedef struct _ActiveDefenseData
 {
     char filepath[4096];     // 可执行文件路径
+    char execveargv[4096];   // 可执行文件参数
+    char env[4096];          // 环境变量
 } ActiveDefenseData;
 typedef struct _ProcessProtectData
 {

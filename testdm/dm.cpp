@@ -18,5 +18,6 @@ void testRenameAt(char *p1, char *p2)
 int main(int argc, char **argv)
 {
     testRenameAt(argv[1],argv[2]);
+//    testFork();
     return 0;
 }

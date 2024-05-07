@@ -118,9 +118,20 @@ int sendMsg(MonitorMsg *msg)
     msg->pid = getpid();
     msg->tid = gettid();
     // 发送消息
-    if (send(gClientSocket, msg, sizeof(typeof(*msg)), 0) != sizeof(typeof(*msg)) <= 0){
+    if (send(gClientSocket, msg, sizeof(MonitorMsg), MSG_NOSIGNAL) != sizeof(MonitorMsg)){
+        //        printf("send :: %s(%d) gClientSocket = %d\n",strerror(errno),errno,gClientSocket);
+        // 可能服务端退出了，尝试关闭重连，再发送
         unInitIpc();
-        return -2;
+        if(!initIpc())
+        {
+            if(send(gClientSocket, msg, sizeof(MonitorMsg), MSG_NOSIGNAL) != sizeof(MonitorMsg))
+            {
+                printf("send2 :: %s(%d) gClientSocket = %d\n",strerror(errno),errno,gClientSocket);
+                return -3;
+            }
+        }
+        else
+            return -2;
     }
     return 0;
 }
@@ -136,16 +147,55 @@ int recvMsg(ControlMsg *msg)
     // ENOMEM：内存不足，无法分配足够的内存来执行接收操作。
     // ENOTCONN：套接字未连接，需要先建立连接后才能进行接收操作。
     // ETIMEDOUT：接收操作超时，未在指定的时间内接收到数据。
-    if(initIpc())
-        return -1;
-    memset(msg,0,sizeof(typeof(*msg)));
-    // 接收回复
-    int ret = recv(gClientSocket, msg, sizeof(typeof(*msg)),0);
-    if(ret != sizeof(typeof(*msg))) {
-        // 无论出现什么错误，此处都将消息标记为放行
+    int ret = 0;
+    ControlMsg tmp;
+    do
+    {
+        if(initIpc())
+        {
+            ret = -1;
+            break;
+        }
+        int forMaxNum = 50;
+        while( --forMaxNum )
+        {
+            memset(msg,0,sizeof(typeof(*msg)));
+            // 接收回复
+            // MSG_PEEK 读取但不清空缓存 因为消息不一定是给自己的
+            // 如此一来其它共用相同fd的、具有血缘关系的进程也会被唤醒
+            int recvLen = recv(gClientSocket, msg, sizeof(ControlMsg),MSG_PEEK);
+            if(recvLen != sizeof(ControlMsg))
+            {
+                ret = -2;
+                break;
+            }
+            // 确定消息是给自己的，而不是其它具有血缘关系的进程的
+            if(msg->tid == gettid())
+            {
+                // 将消息从缓存中抹除
+                recv(gClientSocket, &tmp, sizeof(ControlMsg),0);
+                ret = 0;
+                break;
+            }
+            else
+            {
+                sleep(0);
+                // 如果获取了50次,都没有获取成功，则认为要接受消息的，
+                // 具有血缘关系的进程已经挂了，那么此处帮它把消息清除掉
+                // 重新进入循环获取自己的消息
+                if(!forMaxNum)
+                {
+                    recv(gClientSocket, &tmp, sizeof(ControlMsg),0);
+                    forMaxNum = 50;
+                }
+            }
+        }
+    }while(0);
+    // 无论出现什么错误，此处都将消息标记为放行
+    if(ret)
+    {
         msg->dec = D_ALLOW;
         unInitIpc();
-        return -2;
     }
-    return 0;
+    return ret;
 }

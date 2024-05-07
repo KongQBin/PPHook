@@ -5,6 +5,7 @@ public:
     map_value_finder(const long &id):m_id(id){}
     bool operator ()(const std::map<int, long>::value_type &pair)
     {
+        printf("pair.secon = %d\tmid = %d\n",pair.second,m_id);
         return pair.second == m_id;
     }
 private:
@@ -90,18 +91,18 @@ int IPCServer::answerMsg(ControlMsg *msg)
 {
     int targetFd;
     int error = 0;
+
     m_mapMutex.lock();
-    auto it = find_if(m_map.begin(),m_map.end(),map_value_finder(msg->tid));
+    auto it = m_map.find(msg->tid);
     if(it == m_map.end())
-        error = -1;
-    else
-        // 防止迭代器失效
-        targetFd = it->first;
+        return -1;
+    targetFd = it->second;
     m_mapMutex.unlock();
+
     if(!error)
     {
         // 回复消息
-        if(send(targetFd, msg, sizeof(ControlMsg), 0) != sizeof(ControlMsg))
+        if(send(targetFd, msg, sizeof(ControlMsg), MSG_NOSIGNAL) != sizeof(ControlMsg))
         {
             perror("send : ");
             error = -2;
@@ -270,14 +271,21 @@ void IPCServer::evtWaitThread()
             else {
                 memset(m_msg, 0, sizeof(MonitorMsg));
                 ssize_t bytes_received = recv(fd, m_msg, sizeof(MonitorMsg), 0);
-                if (bytes_received <= 0) {
-                    if (bytes_received == 0) {
-//                        printf("client disconnected.\n");
-                    } else {
-                        perror("recv : ");
-                    }
+                if (bytes_received <= 0)
+                {
+                    if (bytes_received != 0)
+                        printf("fd:%d\trecv err : %s(%d)\n",fd,strerror(errno),errno);
+//                    else
+//                        printf("fd:%d\tclient disconnected.\n",fd);
+                    // 该fd断开或者出现了其它问题
                     m_mapMutex.lock();
-                    m_map.erase(fd);
+                    // 清空使用相同fd的元素
+                    for (auto it = m_map.begin(); it != m_map.end();) {
+                        if (it->second == fd)
+                            it = m_map.erase(it);
+                        else
+                            ++it;
+                    }
                     m_mapMutex.unlock();
                     // 从 epoll 实例中移除套接字
                     epoll_ctl(m_epollfd, EPOLL_CTL_DEL, fd, NULL);
@@ -286,7 +294,8 @@ void IPCServer::evtWaitThread()
                 }
                 m_mapMutex.lock();
                 // 更新映射关系
-                m_map[fd] = m_msg->tid;
+                printf(">>>>>> fd = %d\t",fd,m_msg->tid);
+                m_map[m_msg->tid] = fd;
                 m_mapMutex.unlock();
                 // 将消息传递至上层
                 m_callBack(m_msg);
