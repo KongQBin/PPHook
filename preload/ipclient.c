@@ -9,6 +9,13 @@ int initMmap() {
         if(gConfig)
             break;
         // 打开内存
+        /*
+         * shm_open的实现中又调用open函数！！
+         *
+         * 一般情况下shm_open和open均存在于libc中，故会直接内部调用，不会再查找open符号。
+         * 但在一些系统中，shm_open在librt库中，open函数在libc中，所以shm_open在调用时会再去查找open符号，
+         * 当我们hook了open函数时，此处就会进入死循环 shm_open -> 我们的open -> initMmap -> shm_open。
+        */
         fd = shm_open(MMAP_PATH, O_RDWR, 0666);
         if(fd < 0)
         {

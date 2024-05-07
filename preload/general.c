@@ -20,14 +20,14 @@ static inline int mreadlink(char *originPath, char **targetPath, size_t *len)
 int __getCwd(char **cwd, size_t *len, defaultdata *data)
 {
     char cwdPath[64] = { 0 };
-    sprintf(cwdPath,"/proc/%llu/task/%llu/cwd",data->pid,data->tid);
+    sprintf(cwdPath,"/proc/%u/task/%u/cwd",data->pid,data->tid);
     return mreadlink(cwdPath,cwd,len);
 }
 
 int __getFdPath(char **path, size_t *len, int fd, defaultdata *data)
 {
     char fdPath[128] = { 0 };
-    sprintf(fdPath,"/proc/%llu/task/%llu/fd/%d",data->pid,data->tid,fd);
+    sprintf(fdPath,"/proc/%u/task/%u/fd/%d",data->pid,data->tid,fd);
     return mreadlink(fdPath,path,len);
 }
 

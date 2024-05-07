@@ -67,7 +67,7 @@ int initOpenMsg(const int __fd, const char *__file, MonitorMsg *msg)
             getCwd(&dirPath,&dirPathLen);
         if(dirPath)
         {
-            snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,dirPath);
+            snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,"%s",dirPath);
             strncat(msg->data.add.filepath,"/",sizeof(msg->data.add.filepath)-strlen(msg->data.add.filepath)-1);
             free(dirPath);
         }
@@ -90,7 +90,7 @@ int initUnlinkMsg(const int __fd, const char *__name, MonitorMsg *msg)
             getCwd(&dirPath,&dirPathLen);
         if(dirPath)
         {
-            snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,dirPath);
+            snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,"%s",dirPath);
             strncat(msg->data.add.filepath,"/",sizeof(msg->data.add.filepath)-strlen(msg->data.add.filepath)-1);
             free(dirPath);
         }

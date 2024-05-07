@@ -25,9 +25,9 @@ long syscall(long int __sysno, ...)
 #if defined(__x86_64__)
         CaseSysno(open,argv[0],argv[1],argv[2]);
         CaseSysno(rename,argv[0],argv[1]);
+        CaseSysno(unlink,argv[0]);
 #endif
         CaseSysno(openat,argv[0],argv[1],argv[2],argv[3]);
-        CaseSysno(unlink,argv[0]);
         CaseSysno(unlinkat,argv[0],argv[1],argv[2]);
         CaseSysno(close,argv[0]);
         CaseSysno(renameat,argv[0],argv[1],argv[2],argv[3]);

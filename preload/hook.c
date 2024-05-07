@@ -102,6 +102,8 @@ NHOOK_EXPORT long open(const char *path, int oflag, mode_t mode)
     {
         if(!path) break;
         if(uptime()) break;
+        // 判断是不是我们的内存映射Key
+        if(strstr(path,MMAP_PATH)) break;
         if(!getActiveDefense()) break;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
         if(msg)
@@ -134,6 +136,8 @@ NHOOK_EXPORT long open64(const char *path, int oflag, mode_t mode)
     {
         if(!path) break;
         if(uptime()) break;
+        // 判断是不是我们的内存映射Key
+        if(strstr(path,MMAP_PATH)) break;
         if(!getActiveDefense()) break;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
         if(msg)
@@ -165,6 +169,8 @@ NHOOK_EXPORT long openat(int __fd, const char *__file, int __oflag, .../*mode_t*
     {
         if(!__file) break;
         if(uptime()) break;
+        // 判断是不是我们的内存映射Key
+        if(strstr(__file,MMAP_PATH)) break;
         if(!getActiveDefense()) break;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
         if(msg)
@@ -200,7 +206,7 @@ NHOOK_EXPORT long close(int __fd)
             getFdPath(&path,&pathLen,__fd);
             if(path)
             {
-                snprintf(msg->data.fmd.filepath,sizeof(msg->data.fmd.filepath)-1,path);
+                snprintf(msg->data.fmd.filepath,sizeof(msg->data.fmd.filepath)-1,"%s",path);
                 realPath(msg->data.fmd.filepath,sizeof(msg->data.fmd.filepath));
                 if(msg->data.fmd.filepath[0] == '/')
                     sendMsg(msg);
@@ -339,7 +345,7 @@ NHOOK_EXPORT long fexecve(int __fd, char *const __argv[], char *const __envp[])
             getFdPath(&fdPath,&fdPathLen,__fd);
             if(fdPath)
             {
-                snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,fdPath);
+                snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,"%s",fdPath);
                 realPath(msg->data.add.filepath,sizeof(msg->data.add.filepath));
                 free(fdPath);
             }
@@ -375,7 +381,7 @@ NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const
             char tmpKoPath[256] = { 0 };
             const char *dPath = "/tmp/jyn_active_defense/";
             if(access(dPath,F_OK) != 0) mkdir(dPath,0666);
-            snprintf(tmpKoPath,sizeof(tmpKoPath)-1,"%s_%lu_%lu.ko",dPath,getpid(),gettid());
+            snprintf(tmpKoPath,sizeof(tmpKoPath)-1,"%s_%u_%u.ko",dPath,getpid(),gettid());
             // 根据驱动内容生成一个临时文件
             int tmpFd = real_open(tmpKoPath,O_CREAT|O_WRONLY,0666);
             if(tmpFd >= 0)
@@ -386,7 +392,7 @@ NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const
                 real_close(tmpFd);
             }
             // 消息构建
-            snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,tmpKoPath);
+            snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,"%s",tmpKoPath);
             realPath(msg->data.add.filepath,sizeof(msg->data.add.filepath));
             if(!sendMsg(msg))
                 recvMsg(&cmsg);
@@ -419,7 +425,7 @@ NHOOK_EXPORT long finit_module(int fd, const char *param_values,int flags)
             getFdPath(&path,&pathLen,fd);
             if(path)
             {
-                snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,path);
+                snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,"%s",path);
                 realPath(msg->data.add.filepath,sizeof(msg->data.add.filepath));
                 free(path);
                 if(!sendMsg(msg))
@@ -450,7 +456,7 @@ NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
         {
             msg->type = M_ACTIVE_DEFENSE;
             strncat(msg->funcname,"delete_module",sizeof(msg->funcname)-1);
-            snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,name_user);
+            snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,"%s",name_user);
             realPath(msg->data.add.filepath,sizeof(msg->data.add.filepath));
             if(!sendMsg(msg))
                 recvMsg(&cmsg);
@@ -484,7 +490,7 @@ NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
             getExe(&exe,&exeLen,__pid);
             if(exe)
             {
-                snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,exe);
+                snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,"%s",exe);
                 free(exe);
             }
             if(!sendMsg(msg))

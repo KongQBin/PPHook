@@ -5,7 +5,7 @@ public:
     map_value_finder(const long &id):m_id(id){}
     bool operator ()(const std::map<int, long>::value_type &pair)
     {
-        printf("pair.secon = %d\tmid = %d\n",pair.second,m_id);
+        printf("pair.secon = %ld\tmid = %ld\n",pair.second,m_id);
         return pair.second == m_id;
     }
 private:
@@ -294,7 +294,7 @@ void IPCServer::evtWaitThread()
                 }
                 m_mapMutex.lock();
                 // 更新映射关系
-                printf(">>>>>> fd = %d\t",fd,m_msg->tid);
+                printf(">>>>>> fd = %d\t",fd);
                 m_map[m_msg->tid] = fd;
                 m_mapMutex.unlock();
                 // 将消息传递至上层
