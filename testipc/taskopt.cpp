@@ -22,7 +22,6 @@ TaskOpt::TaskOpt()
 
 TaskOpt::~TaskOpt()
 {
-
 }
 
 int TaskOpt::init()

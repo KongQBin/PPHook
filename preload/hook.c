@@ -25,6 +25,7 @@ int uptime()
     return !gUptime;
 }
 
+extern int ignoreDir(const char* path);
 extern int initRenameMsg(const int __oldfd, const char *__old, const int __newfd,
                     const char *__new, MonitorMsg *msg);
 extern int initOpenMsg(const int __fd, const char *__file, MonitorMsg *msg);
@@ -110,7 +111,7 @@ NHOOK_EXPORT long open(const char *path, int oflag, mode_t mode)
         {
             initOpenMsg(AT_FDCWD,path,msg);
             strncat(msg->funcname,"open",sizeof(msg->funcname)-1);
-            if(!sendMsg(msg))
+            if(!ignoreDir(msg->data.add.filepath) && !sendMsg(msg))
                 recvMsg(&cmsg);
             free(msg);
         }
@@ -144,7 +145,7 @@ NHOOK_EXPORT long open64(const char *path, int oflag, mode_t mode)
         {
             initOpenMsg(AT_FDCWD,path,msg);
             strncat(msg->funcname,"open64",sizeof(msg->funcname)-1);
-            if(!sendMsg(msg))
+            if(!ignoreDir(msg->data.add.filepath) && !sendMsg(msg))
                 recvMsg(&cmsg);
             free(msg);
         }
@@ -177,7 +178,7 @@ NHOOK_EXPORT long openat(int __fd, const char *__file, int __oflag, .../*mode_t*
         {
             initOpenMsg(__fd,__file,msg);
             strncat(msg->funcname,"openat",sizeof(msg->funcname)-1);
-            if(!sendMsg(msg))
+            if(!ignoreDir(msg->data.add.filepath) && !sendMsg(msg))
                 recvMsg(&cmsg);
             free(msg);
         }
@@ -208,7 +209,7 @@ NHOOK_EXPORT long close(int __fd)
             {
                 snprintf(msg->data.fmd.filepath,sizeof(msg->data.fmd.filepath)-1,"%s",path);
                 realPath(msg->data.fmd.filepath,sizeof(msg->data.fmd.filepath));
-                if(msg->data.fmd.filepath[0] == '/')
+                if(!ignoreDir(msg->data.fmd.filepath) && msg->data.fmd.filepath[0] == '/')
                     sendMsg(msg);
                 free(path);
             }
@@ -480,19 +481,41 @@ NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
         if(uptime()) break;
         if(!__sig) break;
         if(!getActiveDefense()) break;
+
+        // 判断当前信号发送者
+        // 如果是系统服务管理进程，则不监控
+        // 否则关机时会阻塞导致无法关机
+
+        // 此处会产生一个问题，如果用systemctl手动去停止被保护的服务，那么进程防护就会失去作用
+        // 只能从execve处，获取执行systemctl的参数的形式，来分析用户、恶意程序要停止的服务
+        char *exe = NULL;
+        size_t exeLen = 0;
+        getExe(&exe,&exeLen);
+        if(exe)
+        {
+            int b = 0;
+            if(strstr(exe,"init")) b = 1;
+            if(strstr(exe,"systemd")) b = 1;
+            free(exe);
+            exe = NULL;
+            exeLen = 0;
+            if(b) break;
+        }
+
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
         if(msg)
         {
             msg->type = M_ACTIVE_DEFENSE;
             strncat(msg->funcname,"kill",sizeof(msg->funcname)-1);
-            char *exe = NULL;
-            size_t exeLen = 0;
+            msg->data.add.sig = __sig;
             getExe(&exe,&exeLen,__pid);
             if(exe)
             {
                 snprintf(msg->data.add.filepath,sizeof(msg->data.add.filepath)-1,"%s",exe);
                 free(exe);
             }
+            // 在此处判断信号目的地是上层交互应用，如果是，则不去监控，也可以解决无法关机的问题
+            // 但是，如此一来，我们的上层交互应用就无法被保护了
             if(!sendMsg(msg))
                 recvMsg(&cmsg);
             free(msg);

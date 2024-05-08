@@ -8,6 +8,19 @@
 #include "general.h"
 #include "ipclient.h"
 
+const char *ignoreDirectory[] = {
+    "/proc/",
+};
+
+int ignoreDir(const char* path)
+{
+    for(int i=0;i<sizeof(ignoreDirectory)/sizeof(ignoreDirectory[0]);++i)
+    {
+        if(strstr(path,ignoreDirectory[i]) == path)
+            return 1;
+    }
+    return 0;
+}
 int initRenameMsg(const int __oldfd, const char *__old, const int __newfd,
                     const char *__new, MonitorMsg *msg)
 {

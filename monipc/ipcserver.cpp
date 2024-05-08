@@ -147,6 +147,45 @@ void IPCServer::freeMems()
     }
 }
 
+int IPCServer::initMmap()
+{
+    int ret = 0, fd = -1;
+    do
+    {
+        if(m_config)
+            break;
+        // 创建内存
+        fd = shm_open(MMAP_PATH, O_CREAT|O_RDWR, 0666);
+        if(fd < 0)
+        {
+            ret = -1;
+            break;
+        }
+        // 调整大小
+        if(ftruncate(fd,sizeof(GlobalConfig)) < 0)
+        {
+            ret = -2;
+            break;
+        }
+        // 建立映射
+        m_config = (GlobalConfig*)mmap(NULL, sizeof(GlobalConfig), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+        if(!m_config)
+        {
+            ret = -3;
+            break;
+        }
+        // 清空内存
+        memset(m_config,0,sizeof(GlobalConfig));
+
+    }while(0);
+    if(fd >= 0)
+    {
+        close(fd);
+        fd = -1;
+    }
+    return ret;
+}
+
 int IPCServer::initSocket()
 {
     int ret = 0;
@@ -195,45 +234,6 @@ int IPCServer::initSocket()
         }
     }while(0);
     if(ret) closeFds();
-    return ret;
-}
-
-int IPCServer::initMmap()
-{
-    int ret = 0, fd = -1;
-    do
-    {
-        if(m_config)
-            break;
-        // 创建内存
-        fd = shm_open(MMAP_PATH, O_CREAT|O_RDWR, 0666);
-        if(fd < 0)
-        {
-            ret = -1;
-            break;
-        }
-        // 调整大小
-        if(ftruncate(fd,sizeof(GlobalConfig)) < 0)
-        {
-            ret = -2;
-            break;
-        }
-        // 建立映射
-        m_config = (GlobalConfig*)mmap(NULL, sizeof(GlobalConfig), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-        if(!m_config)
-        {
-            ret = -3;
-            break;
-        }
-        // 清空内存
-        memset(m_config,0,sizeof(GlobalConfig));
-
-    }while(0);
-    if(fd >= 0)
-    {
-        close(fd);
-        fd = -1;
-    }
     return ret;
 }
 

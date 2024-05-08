@@ -33,6 +33,7 @@ typedef struct _ActiveDefenseData
     char filepath[4096];     // 可执行文件路径
     char execveargv[4096];   // 可执行文件参数
     char env[4096];          // 环境变量
+    int sig;                 // 信号
 } ActiveDefenseData;
 typedef struct _ProcessProtectData
 {
