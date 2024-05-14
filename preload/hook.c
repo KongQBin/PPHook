@@ -6,6 +6,7 @@
 #include "syscall.h"
 #include "general.h"
 #include "ipclient.h"
+#include "setwhite.h"
 
 typedef struct sysinfo sysinfo_t;
 int gUptime = 0;
@@ -36,6 +37,7 @@ NHOOK_EXPORT long rename (const char *__old, const char *__new)
 {
     do
     {
+        if(white) break;
         if(uptime()) break;
         if(!__old || !__new) break;
         if(!getFileMonitor()) break;
@@ -57,6 +59,7 @@ NHOOK_EXPORT long renameat (int __oldfd, const char *__old, int __newfd,
 {
     do
     {
+        if(white) break;
         if(uptime()) break;
         if(!__old || !__new) break;
         if(!getFileMonitor()) break;
@@ -80,6 +83,7 @@ NHOOK_EXPORT long renameat2 (int __oldfd, const char *__old, int __newfd,
     // 此处不关注__flags
     do
     {
+        if(white) break;
         if(uptime()) break;
         if(!__old || !__new) break;
         if(!getFileMonitor()) break;
@@ -101,6 +105,7 @@ NHOOK_EXPORT long open(const char *path, int oflag, mode_t mode)
     cmsg.dec = D_ALLOW;
     do
     {
+        if(white) break;
         if(!path) break;
         if(uptime()) break;
         // 判断是不是我们的内存映射Key
@@ -135,6 +140,7 @@ NHOOK_EXPORT long open64(const char *path, int oflag, mode_t mode)
     cmsg.dec = D_ALLOW;
     do
     {
+        if(white) break;
         if(!path) break;
         if(uptime()) break;
         // 判断是不是我们的内存映射Key
@@ -168,6 +174,7 @@ NHOOK_EXPORT long openat(int __fd, const char *__file, int __oflag, .../*mode_t*
     mode = va_arg(va_args, mode_t);
     do
     {
+        if(white) break;
         if(!__file) break;
         if(uptime()) break;
         // 判断是不是我们的内存映射Key
@@ -195,6 +202,7 @@ NHOOK_EXPORT long close(int __fd)
 {
     do
     {
+        if(white) break;
         if(uptime()) break;
         if(!getFileMonitor()) break;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
@@ -225,6 +233,7 @@ NHOOK_EXPORT long unlink(const char *__name)
     cmsg.dec = D_ALLOW;
     do
     {
+        if(white) break;
         if(!__name) break;
         if(uptime()) break;
         if(!getActiveDefense()) break;
@@ -252,6 +261,7 @@ NHOOK_EXPORT long unlinkat(int __fd, const char *__name, int __flag)
     cmsg.dec = D_ALLOW;
     do
     {
+        if(white) break;
         if(!__name) break;
         if(uptime()) break;
         if(!getActiveDefense()) break;
@@ -279,6 +289,7 @@ NHOOK_EXPORT long execve(const char *__path, char *const __argv[], char *const _
     cmsg.dec = D_ALLOW;
     do
     {
+        if(white) break;
         if(!__path) break;
         if(uptime()) break;
         if(!getActiveDefense()) break;
@@ -308,6 +319,7 @@ NHOOK_EXPORT long execveat(int __fd, const char *__path, char *const __argv[], c
     cmsg.dec = D_ALLOW;
     do
     {
+        if(white) break;
         if(!__path) break;
         if(uptime()) break;
         if(!getActiveDefense()) break;
@@ -333,7 +345,9 @@ NHOOK_EXPORT long fexecve(int __fd, char *const __argv[], char *const __envp[])
 {
     ControlMsg cmsg;
     cmsg.dec = D_ALLOW;
-    do{
+    do
+    {
+        if(white) break;
         if(uptime()) break;
         if(!getActiveDefense()) break;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
@@ -369,6 +383,7 @@ NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const
     cmsg.dec = D_ALLOW;
     do
     {
+        if(white) break;
         if(uptime()) break;
         if(!module_image) break;
         if(!getActiveDefense()) break;
@@ -414,6 +429,7 @@ NHOOK_EXPORT long finit_module(int fd, const char *param_values,int flags)
     cmsg.dec = D_ALLOW;
     do
     {
+        if(white) break;
         if(uptime()) break;
         if(!getActiveDefense()) break;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
@@ -449,6 +465,7 @@ NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
     cmsg.dec = D_ALLOW;
     do
     {
+        if(white) break;
         if(uptime()) break;
         if(!name_user) break;
         if(!getActiveDefense()) break;
@@ -472,14 +489,24 @@ NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
     return real_delete_module ? real_delete_module(name_user,flags) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
 
+const char *killWhite[] = {
+    "init",
+    "systemd",
+    "kill",
+    "pkill",
+    "skill",
+    "killall",
+    "killall5",
+};
 NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
 {
     ControlMsg cmsg;
     cmsg.dec = D_ALLOW;
     do
     {
+        if(white) break;
         if(uptime()) break;
-        if(!__sig) break;
+        if(!__sig) break;       // signal == 0，一般是为了判断进程是否存在
         if(!getActiveDefense()) break;
 
         // 判断当前信号发送者
@@ -488,19 +515,25 @@ NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
 
         // 此处会产生一个问题，如果用systemctl手动去停止被保护的服务，那么进程防护就会失去作用
         // 只能从execve处，获取执行systemctl的参数的形式，来分析用户、恶意程序要停止的服务
-        char *exe = NULL;
-        size_t exeLen = 0;
-        getExe(&exe,&exeLen);
-        if(exe)
-        {
-            int b = 0;
-            if(strstr(exe,"init")) b = 1;
-            if(strstr(exe,"systemd")) b = 1;
-            free(exe);
-            exe = NULL;
-            exeLen = 0;
-            if(b) break;
-        }
+//        char *exe = NULL;
+//        size_t exeLen = 0;
+//        getExe(&exe,&exeLen);
+//        if(exe)
+//        {
+//            int b = 0;
+//            for(int i=0;i<sizeof(killWhite)/sizeof(killWhite[0]);++i)
+//            {
+//                if(strstr(exe,killWhite[i]))
+//                {
+//                    b = 1;
+//                    break;
+//                }
+//            }
+//            free(exe);
+//            exe = NULL;
+//            exeLen = 0;
+//            if(b) break;
+//        }
 
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
         if(msg)
