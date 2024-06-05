@@ -515,26 +515,8 @@ NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
 
         // 此处会产生一个问题，如果用systemctl手动去停止被保护的服务，那么进程防护就会失去作用
         // 只能从execve处，获取执行systemctl的参数的形式，来分析用户、恶意程序要停止的服务
-//        char *exe = NULL;
-//        size_t exeLen = 0;
-//        getExe(&exe,&exeLen);
-//        if(exe)
-//        {
-//            int b = 0;
-//            for(int i=0;i<sizeof(killWhite)/sizeof(killWhite[0]);++i)
-//            {
-//                if(strstr(exe,killWhite[i]))
-//                {
-//                    b = 1;
-//                    break;
-//                }
-//            }
-//            free(exe);
-//            exe = NULL;
-//            exeLen = 0;
-//            if(b) break;
-//        }
-
+        char *exe = NULL;
+        size_t exeLen = 0;
         MonitorMsg *msg = calloc(1,sizeof(MonitorMsg));
         if(msg)
         {
