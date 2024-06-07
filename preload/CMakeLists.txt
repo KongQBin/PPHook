@@ -1,9 +1,12 @@
 include_directories(
     ./
+    ../
+    ../../global
     )
 
 FILE(GLOB PRELOAD_LIST
     "../*.h"
+    "../../global/*.h"
     "*.c" "*.h"
 )
 

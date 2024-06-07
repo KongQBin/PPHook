@@ -1,6 +1,6 @@
 #include "ipclient.h"
 static int gClientSocket = -1;
-static GlobalConfig *gConfig = NULL;
+static CONTROL_INFO *gConfig = NULL;
 
 // 创建内存映射虚拟文件
 /*
@@ -12,12 +12,12 @@ static GlobalConfig *gConfig = NULL;
 int mshm_open(const char *name, const int oflag, const int mode)
 {
 
-    const char *shm = "/dev/shm/";
     char path[256] = {0};
+    const char *shm = "/dev/shm/";
     if(strlen(shm)+strlen(name) > sizeof(path)-1)
         return -1;
     snprintf(path,sizeof(path)-1,"%s%s",shm,name);
-    return real_open(path,oflag,mode);
+    return real_open ? real_open(path,oflag,mode) : -1;
 }
 // 该函数不负责创建内存
 int initMmap() {
@@ -33,7 +33,7 @@ int initMmap() {
             break;
         }
         // 建立映射
-        gConfig = mmap(NULL, sizeof(GlobalConfig), PROT_READ, MAP_SHARED, fd, 0);
+        gConfig = mmap(NULL, sizeof(CONTROL_INFO)*TP_MAX, PROT_READ, MAP_SHARED, fd, 0);
         if(!gConfig)
         {
             ret = -2;
@@ -41,26 +41,20 @@ int initMmap() {
         }
     }while(0);
     if(fd >= 0 && real_close)
-        real_close(fd);         // 切忌使用close，会造成死循环
+        real_close(fd);         // 切忌直接使用close，会造成死循环
     return ret;
 }
 
-int getFileMonitor()
+int getOnoff(TRACE_POINT tp)
 {
-    return gConfig ? gConfig->fileMonitor :
-               (initMmap() ? 0 : gConfig->fileMonitor);
+    return tp>=TP_MAX ? 0 : (!initMmap() ? gConfig[tp].onoff[CF_ON_OFF] : 0);
 }
-int getActiveDefense()
+int getBackwait(TRACE_POINT tp)
 {
-    return gConfig ? gConfig->activeDefense :
-               (initMmap() ? 0 : gConfig->activeDefense);
-}
-int getProcessProtect()
-{
-    return gConfig ? gConfig->processProtect :
-               (initMmap() ? 0 : gConfig->processProtect);
+    return tp>=TP_MAX ? 0 : (!initMmap() ? gConfig[tp].onoff[CF_BACK_WAIT] : 0);
 }
 
+pthread_mutex_t rMutex;
 int unInitIpc()
 {
     // 关闭套接字
@@ -69,6 +63,7 @@ int unInitIpc()
         real_close(gClientSocket);
         gClientSocket = -1;
     }
+    pthread_mutex_destroy(&rMutex);
 //    // 顺便共享内存取消映射
 //    munmap(gConfig, sizeof(GlobalConfig));
 //    gConfig = NULL;
@@ -87,7 +82,7 @@ int initIpc() {
     }
 
     // 设置缓冲区大小
-    int send_buffer_size = BUF_SIZE;
+    int send_buffer_size = 212992;
     if(setsockopt(gClientSocket, SOL_SOCKET, SO_SNDBUF, &send_buffer_size, sizeof(send_buffer_size)) == -1)
     {
         unInitIpc();
@@ -113,11 +108,11 @@ int initIpc() {
         unInitIpc();
         return -4;
     }
-
+    pthread_mutex_init(&rMutex,NULL);
     return 0;
 }
 
-int sendMsg(MonitorMsg *msg)
+int sendMsg(PCOMMON_DATA msg)
 {
     // EACCES：权限被拒绝，当前进程没有足够的权限执行发送操作。
     // EAGAIN 或 EWOULDBLOCK：套接字被标记为非阻塞，并且发送操作将阻塞。
@@ -132,16 +127,14 @@ int sendMsg(MonitorMsg *msg)
     // EPIPE：套接字处于断开状态，写入到已经关闭的套接字。
     if(initIpc())
         return -1;
-    msg->pid = getpid();
-    msg->tid = gettid();
     // 发送消息
-    if (send(gClientSocket, msg, sizeof(MonitorMsg), MSG_NOSIGNAL) != sizeof(MonitorMsg)){
+    if (send(gClientSocket, msg, sizeof(COMMON_DATA), MSG_NOSIGNAL) != sizeof(COMMON_DATA)){
         //        printf("send :: %s(%d) gClientSocket = %d\n",strerror(errno),errno,gClientSocket);
         // 可能服务端退出了，尝试关闭重连，再发送
         unInitIpc();
         if(!initIpc())
         {
-            if(send(gClientSocket, msg, sizeof(MonitorMsg), MSG_NOSIGNAL) != sizeof(MonitorMsg))
+            if(send(gClientSocket, msg, sizeof(COMMON_DATA), MSG_NOSIGNAL) != sizeof(COMMON_DATA))
             {
                 printf("send2 :: %s(%d) gClientSocket = %d\n",strerror(errno),errno,gClientSocket);
                 return -3;
@@ -152,7 +145,7 @@ int sendMsg(MonitorMsg *msg)
     }
     return 0;
 }
-int recvMsg(ControlMsg *msg)
+int recvMsg(CONTROL_INFO *msg)
 {
     // EAGAIN 或 EWOULDBLOCK：套接字被标记为非阻塞，并且接收操作将阻塞。
     // EBADF：无效的文件描述符，套接字描述符无效或未打开。
@@ -165,7 +158,7 @@ int recvMsg(ControlMsg *msg)
     // ENOTCONN：套接字未连接，需要先建立连接后才能进行接收操作。
     // ETIMEDOUT：接收操作超时，未在指定的时间内接收到数据。
     int ret = 0;
-    ControlMsg tmp;
+    TRACE_POINT tp = msg->tp;
     do
     {
         if(initIpc())
@@ -177,42 +170,63 @@ int recvMsg(ControlMsg *msg)
         while( --forMaxNum )
         {
             memset(msg,0,sizeof(typeof(*msg)));
+            msg->dec = D_ALLOW;
             // 接收回复
             // MSG_PEEK 读取但不清空缓存 因为消息不一定是给自己的
             // 如此一来其它共用相同fd的、具有血缘关系的进程也会被唤醒
-            int recvLen = recv(gClientSocket, msg, sizeof(ControlMsg),MSG_PEEK);
-            if(recvLen != sizeof(ControlMsg))
+            int recvLen = recv(gClientSocket, msg, sizeof(typeof(*msg)),MSG_PEEK);
+            if(recvLen != sizeof(typeof(*msg)))
             {
                 ret = -2;
                 break;
             }
             // 确定消息是给自己的，而不是其它具有血缘关系的进程的
-            if(msg->tid == gettid())
+            else if(msg->pid == gettid())
             {
                 // 将消息从缓存中抹除
-                recv(gClientSocket, &tmp, sizeof(ControlMsg),0);
+                recv(gClientSocket, msg, sizeof(typeof(*msg)),0);
                 ret = 0;
                 break;
+            }
+            // 开关策略有变更
+            else if(msg->pid == 0)
+            {
+                // 判断当前追踪点的总开关是否被关闭
+                // 判断当前追踪点的等待开关是否被关闭
+                // 如果满足任意条件，则退出等待，立即返回
+                if(!getOnoff(tp) || !getBackwait(tp))   break;
+                else
+                {
+                    // 证明该消息对自己当前的行为没有影响
+                    // 场景1：曾经对自身有影响，上次直接break了，
+                    // 这次获取的消息只是上次遗留在缓存区的
+                    // 场景2：消息确实不会影响自己
+                    // 以上两种场景都需要将消息抹除掉，
+                    // 由于是公共消息，抹除的话可能出现临界资源的问题
+                    pthread_mutex_lock(&rMutex);
+                    // 必须先利用非阻塞读取
+                    recvLen = recv(gClientSocket, msg, sizeof(typeof(*msg)),MSG_PEEK|MSG_DONTWAIT);
+                    if(recvLen == sizeof(typeof(*msg)) && msg->pid == 0)
+                        recv(gClientSocket, msg, sizeof(typeof(*msg)),0);
+                    pthread_mutex_unlock(&rMutex);
+                    continue;
+                }
             }
             else
             {
                 sleep(0);
-                // 如果获取了50次,都没有获取成功，则认为要接受消息的，
+                // 如果获取了50次,都没有获取成功，则认为要接受消息的
                 // 具有血缘关系的进程已经挂了，那么此处帮它把消息清除掉
                 // 重新进入循环获取自己的消息
                 if(!forMaxNum)
                 {
-                    recv(gClientSocket, &tmp, sizeof(ControlMsg),0);
+                    recv(gClientSocket, msg, sizeof(typeof(*msg)),0);
                     forMaxNum = 50;
                 }
             }
         }
     }while(0);
-    // 无论出现什么错误，此处都将消息标记为放行
-    if(ret)
-    {
-        msg->dec = D_ALLOW;
-        unInitIpc();
-    }
+    // 等待过程出现错误，反初始化ipc
+    if(ret) unInitIpc();
     return ret;
 }

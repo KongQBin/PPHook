@@ -1,16 +1,24 @@
 #pragma once
-
 #ifndef F_OK
 # define    F_OK        0
 #endif
 #ifndef O_CREAT
 # define    O_CREAT     0100	/* Not fcntl.  */
 #endif
-#ifndef O_RDWR
-# define O_RDWR		     02
+#ifndef O_RDONLY
+# define    O_RDONLY	00
 #endif
 #ifndef O_WRONLY
 # define    O_WRONLY	01
+#endif
+#ifndef O_RDWR
+# define O_RDWR		    02
+#endif
+#ifndef O_ACCMODE
+# define O_ACCMODE      03
+#endif
+#ifndef O_TRUNC
+# define O_TRUNC        01000	/* not fcntl */
 #endif
 #ifndef O_APPEND
 # define    O_APPEND	02000
@@ -19,6 +27,7 @@
 # define    AT_FDCWD	-100
 #endif
 
+extern ssize_t read (int __fd, void *__buf, size_t __n);
 extern ssize_t write (int __fd, const void *__buf, size_t __n);
 extern ssize_t readlink (const char *__restrict __path,char *__restrict __buf, size_t __len);
 extern __pid_t getpid (void);
