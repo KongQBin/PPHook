@@ -7,6 +7,14 @@ char *GLIBC_VERSION[] =
         "GLIBC_2.2.5",
         "GLIBC_2.17",
 };
+
+//FILE *fopen (const char *__restrict __filename, const char *__restrict __modes);
+//FILE *freopen (const char *__restrict __filename, const char *__restrict __modes, FILE *__restrict __stream);
+//FILE *fopen64 (const char *__restrict __filename, const char *__restrict __modes);
+//FILE *freopen64 (const char *__restrict __filename, const char *__restrict __modes, FILE *__restrict __stream);
+//int fclose (FILE *__stream);
+//int fcloseall (void);
+
 // 查询并初始化真实函数地址
 __attribute ((constructor)) void plInit(void)
 {
@@ -18,6 +26,7 @@ __attribute ((constructor)) void plInit(void)
             if(real_dlsym)  break;
         }
         // 文件监控及保护
+        //      原始文件操作
         INIT_PTR(long,open,(const char *,int,mode_t));
         INIT_PTR(long,open64,(const char *,int,mode_t));
         INIT_PTR(long,openat,(int __fd, const char *__file, int __oflag, .../*mode_t*/));
@@ -27,6 +36,13 @@ __attribute ((constructor)) void plInit(void)
         INIT_PTR(long,renameat2,(int __oldfd, const char *__old, int __newfd,const char *__new, unsigned int __flags));
         INIT_PTR(long,unlink,(const char *__name));
         INIT_PTR(long,unlinkat,(int __fd, const char *__name, int __flag));
+        //      F系列文件操作
+        INIT_PTR(long,fopen,(const char * __filename, const char * __modes));
+        INIT_PTR(long,freopen,(const char * __filename, const char * __modes, void * __stream));
+        INIT_PTR(long,fopen64,(const char * __filename, const char * __modes));
+        INIT_PTR(long,freopen64,(const char * __filename, const char * __modes, void * __stream));
+        INIT_PTR(long,fclose,(void *__stream));
+        INIT_PTR(long,fcloseall,(void));
         // 进程防护
         INIT_PTR(long,execve,(const char *__path, char *const __argv[], char *const __envp[]));
         INIT_PTR(long,execveat,(int __fd, const char *__path, char *const __argv[], char *const __envp[], int __flags));

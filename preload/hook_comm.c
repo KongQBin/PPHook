@@ -1,9 +1,15 @@
 #include "hook_comm.h"
 
+// sudo ls -l /proc/*/fd | grep  "\->" | grep -v "> socket:\[" | grep -v "> pipe:\[" | grep -v "> anon_inode:" | grep -v "总用量 0" | grep -v "> net:\[" | grep -v "> mnt:\[" | grep -v "> /proc" | grep -v "> /dev/" | grep -v "> /run/"
 const char *ignoreDirectory[] = {
     "/proc/",
+    "/dev/",
+    "/run/",
     "socket:[",
-    "pipe:["
+    "pipe:[",
+    "anon_inode:",
+    "net:[",
+    "mnt:[",
 };
 
 int ignoreDir(const char* path)

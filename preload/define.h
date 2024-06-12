@@ -33,6 +33,13 @@ CREATE_DEF(long,renameat,(int __oldfd, const char *__old, int __newfd,const char
 CREATE_DEF(long,renameat2,(int __oldfd, const char *__old, int __newfd,const char *__new, unsigned int __flags))
 CREATE_DEF(long,unlink,(const char *__name))
 CREATE_DEF(long,unlinkat,(int __fd, const char *__name, int __flag))
+CREATE_DEF(long,fopen,(const char * __filename, const char * __modes))
+CREATE_DEF(long,freopen,(const char * __filename, const char * __modes, void * __stream))
+CREATE_DEF(long,fopen64,(const char * __filename, const char * __modes))
+CREATE_DEF(long,freopen64,(const char * __filename, const char * __modes, void * __stream))
+CREATE_DEF(long,fclose,(void *__stream))
+CREATE_DEF(long,fcloseall,(void))
+
 CREATE_DEF(long,execve,(const char *__path, char *const __argv[], char *const __envp[]))
 CREATE_DEF(long,execveat,(int __fd, const char *__path, char *const __argv[], char *const __envp[], int __flags))
 CREATE_DEF(long,fexecve,(int __fd, char *const __argv[], char *const __envp[]))
