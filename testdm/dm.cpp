@@ -58,10 +58,32 @@ void testFileCall()
     sleep(1);
 }
 
+int getSysConfig(const char *path,long *num)
+{
+    FILE *fp = fopen(path, "r");
+    if (fp) {
+        fscanf(fp, "%ld", num);
+        fclose(fp);
+    } else {
+        *num = 0;
+        return -1;
+    }
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
 //    testRenameAt(argv[1],argv[2]);
 //    testFork();
-    testFileCall();
+//    testFileCall();
+
+    // 获取最大读写缓冲区大小
+    long max_send_buf_size,max_recv_buf_size;
+    getSysConfig("/proc/sys/net/core/rmem_max",&max_recv_buf_size);
+    getSysConfig("/proc/sys/net/core/wmem_max",&max_send_buf_size);
+
+    printf("%ld,%ld,",max_recv_buf_size,max_send_buf_size);
+
+
     return 0;
 }

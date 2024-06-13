@@ -2,6 +2,13 @@
 #include "define.h"
 #include "ipclient.h"
 
+
+/* ！！！！！！！！！！慎用MUTEX！！！！！！！！！！
+ * 在本库中如果使用mutex，要考虑会被子进程继承的问题
+ * 若子进程创建的过程中，mutex是lock状态，那么子进程会死锁
+ * 因为父进程解除的只会是自己的mutex，解除不了被子进程继承过去的mutex
+*/
+
 char *GLIBC_VERSION[] =
 {
         "GLIBC_2.2.5",
@@ -16,6 +23,7 @@ char *GLIBC_VERSION[] =
 //int fcloseall (void);
 
 // 查询并初始化真实函数地址
+extern pthread_mutex_t rMutex;
 __attribute ((constructor)) void plInit(void)
 {
     do
@@ -52,8 +60,7 @@ __attribute ((constructor)) void plInit(void)
         INIT_PTR(long,init_module,(const void *module_image, unsigned long len, const char *param_values, const struct module *mod));
         INIT_PTR(long,delete_module,(const char *name_user, unsigned int flags));
         INIT_PTR(long,kill,(__pid_t __pid, int __sig));
-        // syscall 比较特殊，获取不到地址或者拿获取到的地址进行调用会段错误
-        // 它是由LIBC进行特殊处理的
+        // syscall 似乎有点特殊，有时候会段错误
         INIT_PTR(long, syscall,(long int __sysno, ...));
 
     }while(0);

@@ -26,6 +26,17 @@
 #ifndef AT_FDCWD
 # define    AT_FDCWD	-100
 #endif
+// 文件锁其实可以作为进程间互斥锁
+#ifndef LOCK_SH
+# define LOCK_SH 1   /* Shared lock.  */
+# define LOCK_EX 2   /* Exclusive lock.  */
+# define LOCK_UN 8   /* Unlock.  */
+#endif
+
+#define CTL_NET 3
+#define NET_CORE 1
+#define NET_CORE_WMEM_MAX 1
+#define NET_CORE_RMEM_MAX 2
 
 extern ssize_t read (int __fd, void *__buf, size_t __n);
 extern ssize_t write (int __fd, const void *__buf, size_t __n);

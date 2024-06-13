@@ -189,12 +189,13 @@ PCOMMON_DATA initKillMsg(__pid_t *__pid, int *__sig)
 {
     int initsucc = 0;
     PCOMMON_DATA common_data = NULL;
+    long pid = *__pid, sig = *__sig;
     do
     {
         common_data = initCommonData(AUTO_PID,ZyTracePointKill,
-                                     {AT_INT,AT_INT},
-                                     {__pid,__sig},
-                                     {sizeof(__pid_t),sizeof(int)});
+                                     {AT_LONG,AT_LONG},
+                                     {&pid,&sig},
+                                     {sizeof(long),sizeof(long)});
         initsucc = 1;
     }while(0);
     return initsucc ? common_data : NULL;

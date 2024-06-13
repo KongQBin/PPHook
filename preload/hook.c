@@ -132,7 +132,7 @@ NHOOK_EXPORT long open(const char *path, int oflag, mode_t mode)
         if(!(O_ACCMODE&oflag)) break; //读权限打开
         PCOMMON_DATA data = initOpenMsg(AT_FDCWD,path,tp);
         if(!data) break;
-        if(!ignoreDir(data->argvs) && !sendMsg(data) && getBackwait(tp))
+        if(/*!ignoreDir(data->argvs) && */!sendMsg(data) && getBackwait(tp))
             recvMsg(&cmsg);
         free(data);
     }while(0);
@@ -163,7 +163,7 @@ NHOOK_EXPORT long open64(const char *path, int oflag, mode_t mode)
         if(!(O_ACCMODE&oflag)) break;
         PCOMMON_DATA data = initOpenMsg(AT_FDCWD,path,tp);
         if(!data) break;
-        if(!ignoreDir(data->argvs) && !sendMsg(data) && getBackwait(tp))
+        if(/*!ignoreDir(data->argvs) && */!sendMsg(data) && getBackwait(tp))
             recvMsg(&cmsg);
         free(data);
     }while(0);
@@ -194,7 +194,7 @@ NHOOK_EXPORT long openat(int __fd, const char *__file, int __oflag, .../*mode_t*
         if(!(O_ACCMODE&__oflag)) break; //读权限打开
         PCOMMON_DATA data = initOpenMsg(__fd,__file,tp);
         if(!data) break;
-        if(!ignoreDir(data->argvs) && !sendMsg(data) && getBackwait(tp))
+        if(/*!ignoreDir(data->argvs) && */!sendMsg(data) && getBackwait(tp))
             recvMsg(&cmsg);
         free(data);
     }while(0);
@@ -221,7 +221,7 @@ NHOOK_EXPORT long close(int __fd)
         if(openflag < 0 || !(O_ACCMODE&openflag)) break;
         PCOMMON_DATA data = initCloseMsg(__fd);
         if(!data) break;
-        if(!ignoreDir(data->argvs) && !sendMsg(data) && getBackwait(tp))
+        if(/*!ignoreDir(data->argvs) && */!sendMsg(data) && getBackwait(tp))
             recvMsg(&cmsg);
         free(data);
     }while(0);
@@ -244,7 +244,7 @@ NHOOK_EXPORT long/*FILE**/ fopen (const char * __filename, const char * __modes)
         if(!strstr(__modes,"w") && !strstr(__modes,"a")) break;
         PCOMMON_DATA data = initOpenMsg(AT_FDCWD,__filename,tp);
         if(!data) break;
-        if(!ignoreDir(data->argvs) && !sendMsg(data) && getBackwait(tp))
+        if(/*!ignoreDir(data->argvs) && */!sendMsg(data) && getBackwait(tp))
             recvMsg(&cmsg);
         free(data);
     }while(0);
@@ -270,7 +270,7 @@ NHOOK_EXPORT long/*FILE**/ freopen (const char * __filename, const char * __mode
         if(!strstr(__modes,"w") && !strstr(__modes,"a")) break;
         PCOMMON_DATA data = initOpenMsg(AT_FDCWD,__filename,tp);
         if(!data) break;
-        if(!ignoreDir(data->argvs) && !sendMsg(data) && getBackwait(tp))
+        if(/*!ignoreDir(data->argvs) && */!sendMsg(data) && getBackwait(tp))
             recvMsg(&cmsg);
         free(data);
     }while(0);
@@ -296,7 +296,7 @@ NHOOK_EXPORT long/*FILE**/ fopen64 (const char * __filename, const char * __mode
         if(!strstr(__modes,"w") && !strstr(__modes,"a")) break;
         PCOMMON_DATA data = initOpenMsg(AT_FDCWD,__filename,tp);
         if(!data) break;
-        if(!ignoreDir(data->argvs) && !sendMsg(data) && getBackwait(tp))
+        if(/*!ignoreDir(data->argvs) && */!sendMsg(data) && getBackwait(tp))
             recvMsg(&cmsg);
         free(data);
     }while(0);
@@ -322,7 +322,7 @@ NHOOK_EXPORT long/*FILE**/ freopen64 (const char * __filename, const char * __mo
         if(!strstr(__modes,"w") && !strstr(__modes,"a")) break;
         PCOMMON_DATA data = initOpenMsg(AT_FDCWD,__filename,tp);
         if(!data) break;
-        if(!ignoreDir(data->argvs) && !sendMsg(data) && getBackwait(tp))
+        if(/*!ignoreDir(data->argvs) && */!sendMsg(data) && getBackwait(tp))
             recvMsg(&cmsg);
         free(data);
     }while(0);
@@ -333,7 +333,7 @@ NHOOK_EXPORT long/*FILE**/ freopen64 (const char * __filename, const char * __mo
     }
     return real_freopen64 ? real_freopen64(__filename,__modes,__stream) : /*NULL*/0;
 }
-NHOOK_EXPORT int fclose (void *__stream)
+NHOOK_EXPORT long fclose (void *__stream)
 {
     TRACE_POINT tp = ZyTracePointClose;
     CONTROL_INFO cmsg;
@@ -350,7 +350,7 @@ NHOOK_EXPORT int fclose (void *__stream)
         if(openflag < 0 || !(O_ACCMODE&openflag)) break;
         PCOMMON_DATA data = initCloseMsg(__fd);
         if(!data) break;
-        if(!ignoreDir(data->argvs) && !sendMsg(data) && getBackwait(tp))
+        if(/*!ignoreDir(data->argvs) && */!sendMsg(data) && getBackwait(tp))
             recvMsg(&cmsg);
         free(data);
     }while(0);
@@ -367,7 +367,7 @@ struct linux_dirent64 {
     char        d_name[];
 };
 
-NHOOK_EXPORT int fcloseall (void)
+NHOOK_EXPORT long fcloseall (void)
 {
     TRACE_POINT tp = ZyTracePointClose;
     CONTROL_INFO cmsg;
@@ -402,7 +402,7 @@ NHOOK_EXPORT int fcloseall (void)
                 if(openflag < 0 || !(O_ACCMODE&openflag)) continue; // flag错误或只读打开
                 PCOMMON_DATA data = initCloseMsg(tfd);
                 if(!data) continue;
-                if(!ignoreDir(data->argvs) && !sendMsg(data) && getBackwait(tp))
+                if(/*!ignoreDir(data->argvs) && */!sendMsg(data) && getBackwait(tp))
                     recvMsg(&cmsg);
                 free(data);
                 data = NULL;
@@ -412,6 +412,7 @@ NHOOK_EXPORT int fcloseall (void)
     if(fd >= 0 && real_close) real_close(fd);
     return real_fcloseall ? real_fcloseall() : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
+// PS: 去除底层的过滤
 
 NHOOK_EXPORT long unlink(const char *__name)
 {
@@ -437,6 +438,7 @@ NHOOK_EXPORT long unlink(const char *__name)
     }
     return real_unlink ? real_unlink(__name) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
 }
+
 NHOOK_EXPORT long unlinkat(int __fd, const char *__name, int __flag)
 {
     TRACE_POINT tp = ZyTracePointUnlinkat;
