@@ -64,13 +64,23 @@ __attribute ((constructor)) void plInit(void)
         INIT_PTR(long, syscall,(long int __sysno, ...));
 
     }while(0);
-    // 打开日志
-    if(real_open64)
-        gLogFd = real_open64("/tmp/plog",O_CREAT|O_WRONLY|O_APPEND,0777);
-    else
-        gLogFd = real_open("/tmp/plog",O_CREAT|O_WRONLY|O_APPEND,0777);
-    if(gLogFd >=0)
-        chmod("/tmp/plog",0777);
+
+    const char *mdir = "/tmp/nhook/";
+    char lg[64] = {0};
+    snprintf(lg,sizeof(lg)-1,"%splog",mdir);
+    int ret = mkdir(mdir,0777);
+    if(ret == 0 || errno == EEXIST)
+    {
+        // 打开日志 && 创建一个文件用于互斥锁
+        if(real_open)
+            gLogFd = real_open(lg,O_CREAT|O_WRONLY|O_APPEND,0777);
+        else if(real_open64)
+            gLogFd = real_open64(lg,O_CREAT|O_WRONLY|O_APPEND,0777);
+        else
+            gLogFd = -1;
+        if(gLogFd >= 0)
+            chmod(lg,0777);
+    }
     // 初始化ipc通信
     initIpc();
 }
