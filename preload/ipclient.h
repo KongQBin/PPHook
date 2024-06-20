@@ -3,6 +3,7 @@
 #include <string.h>
 #include <semaphore.h>
 #include <sys/mman.h>
+#include <sys/syscall.h>
 #include "define.h"
 //#include "structmsg.h"
 #include "ipcdef.h"

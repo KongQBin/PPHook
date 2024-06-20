@@ -6,9 +6,12 @@
 #include <errno.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <queue>
 #include <fcntl.h>
+#include <iostream>
+#include <fstream>
 #include "../ZyThread.h"
-
+using namespace std;
 void testRenameAt(char *p1, char *p2)
 {
     DIR *dir = opendir("/tmp");
@@ -62,6 +65,15 @@ int getSysConfig(const char *path,long *num)
     return 0;
 }
 
+
+
+struct TestStruct
+{
+    int aa = 0;
+    char bb[256] = { 0 };
+};
+
+
 int main(int argc, char **argv)
 {
 //    testRenameAt(argv[1],argv[2]);
@@ -86,21 +98,76 @@ int main(int argc, char **argv)
 //    ZyThread::autoRun(testFileCall);
 //    ZyThread::autoRun(testFileCall);
 
-    FILE *fp = fopen("/home/user/MyGit/SysMonApply/PPHook/testdm/b","a+");
-    if(!fp) printf("fopen err is %s(%d)\n",strerror(errno),errno);
-    int fd = open("/home/user/MyGit/SysMonApply/PPHook/testdm/a",O_CREAT|O_RDWR,0777);
-    if(fd < 0) printf("open err is %s(%d)\n",strerror(errno),errno);
+//    FILE *fp = fopen("/home/user/MyGit/SysMonApply/PPHook/testdm/b","a+");
+//    if(!fp) printf("fopen err is %s(%d)\n",strerror(errno),errno);
+//    int fd = open("/home/user/MyGit/SysMonApply/PPHook/testdm/a",O_CREAT|O_RDWR,0777);
+//    if(fd < 0) printf("open err is %s(%d)\n",strerror(errno),errno);
+//    fcloseall();
+//    int ret = write(fd,"1234\n",strlen("1234\n"));
+//    if(ret != strlen("1234\n"))
+//        printf("write err is %s(%d)\n",strerror(errno),errno);
+//    ret = fputs("5678\n",fp);
+//    if(!ret)
+//        printf("fputs err is %s(%d)\n",strerror(errno),errno);
+//    close(fd);
+//    close(fd);
 
-    fcloseall();
+//    ZyMemPre<TestStruct> test;
+//    test.setPreNum(100000,10000);
+//    test.startPreMem();
+//    for(int i=0;i<1000000000;++i)
+//    {
+////        if(i == 5000) test.stopPreMem();
+////        usleep(0);
+//        TestStruct *tmp = test.getStruct();
+//        if(tmp)
+//        {
+//            memset(tmp,1,sizeof(TestStruct));
+//            delete tmp;
+//        }
+//    }
+//    printf("s1\n");
+//    sleep(10);
+//    printf("s2\n");
 
-    int ret = write(fd,"1234\n",strlen("1234\n"));
-    if(ret != strlen("1234\n"))
-        printf("write err is %s(%d)\n",strerror(errno),errno);
-    ret = fputs("5678\n",fp);
-    if(!ret)
-        printf("fputs err is %s(%d)\n",strerror(errno),errno);
-
-    close(fd);
-    close(fd);
+    char *buffer = NULL;
+    int bufsize = 0, readlen = 0;
+    int fd = open("/proc/2190/environ",O_RDONLY);
+    if(fd>=0)
+    {
+        while(1)
+        {
+            buffer = (char*)calloc(1,bufsize+256);
+            if(!buffer) break;
+            bufsize += 256;
+            lseek(fd,0,SEEK_SET);
+            readlen = read(fd,buffer,bufsize);
+            if(readlen > 0 && readlen < bufsize) break;
+            free(buffer);
+            buffer = NULL;
+            if(readlen < 0)
+                break;
+        }
+        close(fd);
+    }
+    if(buffer)
+    {
+        for(int i=0;i<readlen;++i)
+        {
+            if(buffer[i]=='\0')
+                printf("\n");
+            else
+                printf("%c",buffer[i]);
+        }
+        printf("\n");
+        free(buffer);
+    }
+//    ifstream examplefile("/proc/2190/environ");
+//    if (!examplefile.is_open())
+//    {cout << "Error   opening file"; exit (1);}
+//    while (!examplefile.eof()) {
+//        examplefile.getline(buffer,4095);
+//        cout << buffer<< endl;
+//    }
     return 0;
 }

@@ -42,7 +42,7 @@ extern ssize_t read (int __fd, void *__buf, size_t __n);
 extern ssize_t write (int __fd, const void *__buf, size_t __n);
 extern ssize_t readlink (const char *__restrict __path,char *__restrict __buf, size_t __len);
 extern __pid_t getpid (void);
-extern __pid_t gettid (void);
+//extern __pid_t gettid (void);
 extern int sprintf (char *__restrict __s, const char *__restrict __format, ...);
 extern int snprintf (char *__restrict __s, size_t __maxlen, const char *__restrict __format, ...);
 extern int ftruncate (int __fd, __off_t __length);
@@ -66,5 +66,5 @@ extern long finit_module(int fd, const char *param_values,int flags);
 extern long delete_module(const char *name_user, unsigned int flags);
 extern long kill(__pid_t __pid, int __sig);
 #pragma GCC diagnostic pop
-
-
+#define mgettid()                    real_syscall(__NR_gettid)
+#define mgetdents64(fd,addr,size)    real_syscall(__NR_getdents64,fd,addr,size)

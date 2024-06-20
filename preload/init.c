@@ -81,12 +81,12 @@ __attribute ((constructor)) void plInit(void)
         if(gLogFd >= 0)
             chmod(lg,0777);
     }
-    // 初始化ipc通信
-    initIpc();
+//    // 初始化ipc通信
+//    initIpc();
 }
 // 反初始化
 __attribute ((destructor)) void plFini(void)
 {
     if(gLogFd >= 0) real_close(gLogFd);
-    unInitIpc();
+//    unInitIpc();
 }

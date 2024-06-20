@@ -28,18 +28,11 @@ int initMmap() {
         if(gConfig)
             break;
         fd = mshm_open(MMAP_PATH, O_RDWR, 0666);
-        if(fd < 0)
-        {
-            ret = -1;
-            break;
-        }
+        if(--ret && fd < 0) break;
         // 建立映射
         gConfig = mmap(NULL, sizeof(CONTROL_INFO)*TP_MAX, PROT_READ, MAP_SHARED, fd, 0);
-        if(!gConfig)
-        {
-            ret = -2;
-            break;
-        }
+        if(--ret && !gConfig) break;
+        ret = 0;
     }while(0);
     if(fd >= 0 && real_close)
         real_close(fd);         // 切忌直接使用close，会造成死循环
@@ -82,47 +75,40 @@ int getSysConfig(const char *path,long *num)
     }
     return 0;
 }
-int initIpc() {
-
+int initIpc()
+{
     int ret = 0;
     do
     {
         // 判断是否需要初始化
         if(tGClientSocket != -1) break;
         // 创建域套接字
-        --ret;
         tGClientSocket = socket(AF_UNIX, SOCK_STREAM, 0);
-        if (tGClientSocket == -1) break;
+        if (--ret && tGClientSocket == -1) break;
 
         // 获取最大读写缓冲区大小
         long max_send_buf_size,max_recv_buf_size;
-        --ret;
-        if(getSysConfig("/proc/sys/net/core/rmem_max",&max_recv_buf_size)) break;
-        --ret;
-        if(getSysConfig("/proc/sys/net/core/wmem_max",&max_send_buf_size)) break;
+        if(--ret && getSysConfig("/proc/sys/net/core/rmem_max",&max_recv_buf_size)) break;
+        if(--ret && getSysConfig("/proc/sys/net/core/wmem_max",&max_send_buf_size)) break;
 
         // 设置缓冲区大小
-        --ret;
-        if(setsockopt(tGClientSocket, SOL_SOCKET, SO_RCVBUF,
+        if(--ret && setsockopt(tGClientSocket, SOL_SOCKET, SO_RCVBUF,
                        &max_recv_buf_size, sizeof(max_recv_buf_size)) == -1) break;
-        --ret;
-        if(setsockopt(tGClientSocket, SOL_SOCKET, SO_SNDBUF,
+        if(--ret && setsockopt(tGClientSocket, SOL_SOCKET, SO_SNDBUF,
                        &max_send_buf_size, sizeof(max_send_buf_size)) == -1) break;
 
         // 设置等待超时
-        --ret;
         struct timeval tv_out;
         tv_out.tv_sec = 20;
         tv_out.tv_usec = 0;
-        if(setsockopt(tGClientSocket, SOL_SOCKET, SO_RCVTIMEO, &tv_out, sizeof(tv_out)) == -1) break;
+        if(--ret && setsockopt(tGClientSocket, SOL_SOCKET, SO_RCVTIMEO, &tv_out, sizeof(tv_out)) == -1) break;
 
         // 设置套接字地址并连接
-        --ret;
         sockaddr_un_t address;
         address.sun_family = AF_UNIX;
         strncpy(address.sun_path, SOCKET_PATH, sizeof(address.sun_path) - 1);
         // 连接到服务器
-        if (connect(tGClientSocket, (sockaddr_t*)(&address), sizeof(address)) == -1) break;
+        if (--ret && connect(tGClientSocket, (sockaddr_t*)(&address), sizeof(address)) == -1) break;
         ret = 0;
     }while(0);
     if(ret < -1)
@@ -197,7 +183,7 @@ int recvMsg(CONTROL_INFO *msg)
             break;
         }
         // 确定消息是给自己的
-        else if(msg->pid == gettid())
+        else if(msg->pid == mgettid())
             break;
         // 开关策略有变更
         else if(msg->pid == 0)

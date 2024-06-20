@@ -3,6 +3,34 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wint-conversion"
 
+#if defined(__i386__)           // x86
+    #ifndef __NR_finit_module
+        #define __NR_finit_module 350
+    #endif
+    #ifndef __NR_renameat2
+        #define __NR_renameat2 353
+    #endif
+    #ifndef __NR_execveat
+        #define __NR_execveat 358
+    #endif
+#elif defined(__x86_64__)       // x64
+    #ifndef __NR_finit_module
+        #define __NR_finit_module 313
+    #endif
+    #ifndef __NR_renameat2
+        #define __NR_renameat2 316
+    #endif
+    #ifndef __NR_execveat
+        #define __NR_execveat 322
+    #endif
+#elif defined(__arm__)          // arm32
+#elif defined(__aarch64__) || defined(__ARM64__)    // arm64
+
+#elif defined(__loongarch__) || defined(__mips64__)
+
+#endif
+
+
 #define CaseSysno(callname,...) \
 case __NR_##callname:\
 {\

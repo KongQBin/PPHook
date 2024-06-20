@@ -64,7 +64,7 @@ PCOMMON_DATA _initCommonData(initCommonDataArgvs *av)
     if(!av->pid)
     {
         av->gpid = getpid();
-        av->pid = gettid();
+        av->pid = mgettid();
     }
     return __initCommonData(av);
 }
@@ -225,7 +225,7 @@ PCOMMON_DATA initRenameMsg(const int __oldfd, const char *__old, const int __new
         do
         {
             tmp_data = (PTMP_DATA)calloc(1,sizeof(TMP_DATA));
-            if(!tmp_data)   break;
+            if(!tmp_data) break;
             if(__old[0] != '/') initPrefix(tmp_data->avc[0],__oldfd);
             if(__new[0] != '/') initPrefix(tmp_data->avc[1],__newfd);
             // 拼接前面处理好的路径

@@ -219,7 +219,7 @@ NHOOK_EXPORT long close(int __fd)
         if(white) break;
         if(uptime()) break;
         if(!getOnoff(tp)) break;
-        int openflag = getFdOpenFlag(getpid(),gettid(),__fd);
+        int openflag = getFdOpenFlag(getpid(),mgettid(),__fd);
         if(openflag < 0 || !(O_ACCMODE&openflag)) break;
         PCOMMON_DATA data = initCloseMsg(__fd);
         if(!data) break;
@@ -352,7 +352,7 @@ NHOOK_EXPORT long fclose (void *__stream)
         if(!__stream) break;
         if(!getOnoff(tp)) break;
         __fd = fileno(__stream);
-        int openflag = getFdOpenFlag(getpid(),gettid(),__fd);
+        int openflag = getFdOpenFlag(getpid(),mgettid(),__fd);
         if(openflag < 0 || !(O_ACCMODE&openflag)) break;
         PCOMMON_DATA data = initCloseMsg(__fd);
         if(!data) break;
@@ -387,7 +387,7 @@ NHOOK_EXPORT long fcloseall (void)
     int reinit = 0;
     int fd = -1, readlen = 0;
     char dir[32] = {0}, names[1024] = {0};
-    snprintf(dir,sizeof(dir)-1,"/proc/%d/task/%d/fd",getpid(),gettid());
+    snprintf(dir,sizeof(dir)-1,"/proc/%d/task/%d/fd",getpid(),mgettid());
     struct linux_dirent64 *dirp = NULL;
     do
     {
@@ -398,7 +398,7 @@ NHOOK_EXPORT long fcloseall (void)
         fd = real_open(dir, O_RDONLY, 0);
         if(fd < 0) break;
 
-        while((readlen = getdents64(fd, (struct linux_dirent64 *)names, sizeof(names))) > 0)
+        while((readlen = mgetdents64(fd, (struct linux_dirent64 *)names, sizeof(names))) > 0)
         {
             for(char *ptr = names; ptr < names+readlen; ptr += dirp->d_reclen)
             {
@@ -412,7 +412,7 @@ NHOOK_EXPORT long fcloseall (void)
                 if(dirp->d_name == endptr) continue;        // 转换失败
                 if(fd == tfd)              continue;        // fd是我们前面打开的目录
                 if(fd == tGClientSocket)   reinit = 1;
-                int openflag = getFdOpenFlag(getpid(),gettid(),tfd);
+                int openflag = getFdOpenFlag(getpid(),mgettid(),tfd);
                 if(openflag < 0 || !(O_ACCMODE&openflag)) continue; // flag错误或只读打开
                 PCOMMON_DATA data = initCloseMsg(tfd);
                 if(!data) continue;
@@ -567,7 +567,7 @@ NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const
 
         // 生成一个临时路径
         char tmpKoPath[64] = { 0 };
-        snprintf(tmpKoPath,sizeof(tmpKoPath)-1,"/tmp/jynzfpostmod_%u_%u.ko",getpid(),gettid());
+        snprintf(tmpKoPath,sizeof(tmpKoPath)-1,"/tmp/jynzfpostmod_%u_%u.ko",getpid(),mgettid());
         // 根据驱动内容生成一个临时文件
         int tmpFd = real_open(tmpKoPath,O_CREAT|O_WRONLY|O_TRUNC,0666);
         if(tmpFd >= 0)
