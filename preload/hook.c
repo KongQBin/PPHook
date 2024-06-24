@@ -27,6 +27,57 @@ int uptime()
     return !gUptime;
 }
 
+NHOOK_EXPORT long prctl(int __option, ...)
+{
+    int ret = -1;
+    va_list va_args;
+    long argv[7] = { 0 };
+    va_start(va_args,__option);
+    for(int i=0;i<sizeof(argv)/sizeof(argv[0]);++i)
+        argv[i] = va_arg(va_args, long);
+    // PR_SET_NO_NEW_PRIVS会导致DNS缓存服务(systemd-resolved)启动失败
+    // 再者，我们的hook中不需要提权，故忽略即可
+    if(/*PR_SET_NO_NEW_PRIVS != __option && */PR_GET_SECCOMP != __option
+        && PR_SET_SECCOMP != __option)
+    {
+        if(real_prctl)
+            ret = real_prctl(__option,argv[0],argv[1],argv[2],argv[3],argv[4],argv[5],argv[6]);
+        else
+            ret = directCall(__NR_prctl,__option,argv[0],argv[1],argv[2],argv[3],argv[4],argv[5],argv[6]);
+    }
+    else
+    {
+        ret = -1;
+        errno = EPERM;
+    }
+    va_end(va_args);
+    return ret;
+}
+
+NHOOK_EXPORT long seccomp(unsigned int operation, unsigned int flags, ...)
+{
+    int ret = -1;
+    va_list va_args;
+    long argv[7] = { 0 };
+    va_start(va_args,flags);
+    for(int i=0;i<sizeof(argv)/sizeof(argv[0]);++i)
+        argv[i] = va_arg(va_args, long);
+    if(SECCOMP_SET_MODE_FILTER != operation)
+    {
+        if(real_seccomp)
+            ret = real_seccomp(operation,flags,argv[0],argv[1],argv[2],argv[3],argv[4],argv[5],argv[6]);
+        else
+            ret = directCall(__NR_seccomp,operation,flags,argv[0],argv[1],argv[2],argv[3],argv[4],argv[5],argv[6]);
+    }
+    else
+    {
+        ret = -1;
+        errno = EPERM;
+    }
+    va_end(va_args);
+    return ret;
+}
+
 extern int ignoreDir(const char* path);
 extern PCOMMON_DATA initCloseMsg(const int __fd);
 extern PCOMMON_DATA initFexecveMsg(const int __fd);
@@ -48,6 +99,10 @@ NHOOK_EXPORT long rename (const char *__old, const char *__new)
     cmsg.tp = tp;
     do
     {
+        /////////////////////////////////////
+        /// 还需要增加一个对seccomp开关的判断
+        ///   避免对方是静态链接的seccomp库
+        /// /////////////////////////////////
         if(white) break;
         if(uptime()) break;
         if(!__old || !__new) break;
@@ -62,7 +117,9 @@ NHOOK_EXPORT long rename (const char *__old, const char *__new)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_rename ? real_rename(__old,__new) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_rename
+               ? real_rename(__old,__new)
+               : directCall(__NR_rename,__old,__new);
 }
 NHOOK_EXPORT long renameat (int __oldfd, const char *__old, int __newfd,
                     const char *__new)
@@ -87,7 +144,9 @@ NHOOK_EXPORT long renameat (int __oldfd, const char *__old, int __newfd,
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_renameat ? real_renameat(__oldfd,__old,__newfd,__new) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_renameat
+               ? real_renameat(__oldfd,__old,__newfd,__new)
+               : directCall(__NR_renameat,__oldfd,__old,__newfd,__new);
 }
 NHOOK_EXPORT long renameat2 (int __oldfd, const char *__old, int __newfd,
                      const char *__new, unsigned int __flags)
@@ -115,8 +174,11 @@ NHOOK_EXPORT long renameat2 (int __oldfd, const char *__old, int __newfd,
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_renameat2 ? real_renameat2(__oldfd,__old,__newfd,__new,__flags) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_renameat2
+               ? real_renameat2(__oldfd,__old,__newfd,__new,__flags)
+               : directCall(__NR_renameat2,__oldfd,__old,__newfd,__new,__flags);
 }
+
 NHOOK_EXPORT long open(const char *path, int oflag, mode_t mode)
 {
     TRACE_POINT tp = ZyTracePointOpen;
@@ -141,7 +203,9 @@ NHOOK_EXPORT long open(const char *path, int oflag, mode_t mode)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_open ? real_open(path,oflag,mode) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_open
+               ? real_open(path,oflag,mode)
+               : directCall(__NR_open,path,oflag,mode);
 }
 NHOOK_EXPORT long open64(const char *path, int oflag, mode_t mode)
 {
@@ -172,7 +236,9 @@ NHOOK_EXPORT long open64(const char *path, int oflag, mode_t mode)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_open64 ? real_open64(path,oflag,mode) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_open64
+               ? real_open64(path,oflag,mode)
+               : directCall(__NR_open,path,oflag,mode);
 }
 NHOOK_EXPORT long openat(int __fd, const char *__file, int __oflag, .../*mode_t*/)
 {
@@ -203,7 +269,9 @@ NHOOK_EXPORT long openat(int __fd, const char *__file, int __oflag, .../*mode_t*
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_openat ? real_openat(__fd,__file,__oflag,mode) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_openat
+               ? real_openat(__fd,__file,__oflag,mode)
+               : directCall(__NR_openat,__fd,__file,__oflag,mode);
 }
 extern __thread int tGClientSocket;
 int getFdOpenFlag(pid_t gpid, pid_t pid, long fd);
@@ -228,11 +296,12 @@ NHOOK_EXPORT long close(int __fd)
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL){}
-    ret = (real_close ? real_close(__fd) : SYMBOL_IS_NOT_FOUND_IN_LIBC);
+    ret = (real_close
+               ? real_close(__fd)
+               : directCall(__NR_close,__fd));
     if(__fd == tGClientSocket) tGClientSocket = -1; /*使下次使用socket会被重新初始化*/
     return ret;
 }
-
 NHOOK_EXPORT long/*FILE**/ fopen (const char * __filename, const char * __modes)
 {
     TRACE_POINT tp = ZyTracePointOpen;
@@ -257,7 +326,9 @@ NHOOK_EXPORT long/*FILE**/ fopen (const char * __filename, const char * __modes)
         errno = EPERM;  // 无权限
         return /*NULL*/0;
     }
-    return real_fopen ? real_fopen(__filename,__modes) : /*NULL*/0;
+    return real_fopen
+               ? real_fopen(__filename,__modes)
+               : /*NULL*/0;
 }
 NHOOK_EXPORT long/*FILE**/ freopen (const char * __filename, const char * __modes, void/*FILE*/ * __stream)
 {
@@ -283,7 +354,9 @@ NHOOK_EXPORT long/*FILE**/ freopen (const char * __filename, const char * __mode
         errno = EPERM;  // 无权限
         return /*NULL*/0;
     }
-    return real_freopen ? real_freopen(__filename,__modes,__stream) : /*NULL*/0;
+    return real_freopen
+               ? real_freopen(__filename,__modes,__stream)
+               : /*NULL*/0;
 }
 NHOOK_EXPORT long/*FILE**/ fopen64 (const char * __filename, const char * __modes)
 {
@@ -309,7 +382,9 @@ NHOOK_EXPORT long/*FILE**/ fopen64 (const char * __filename, const char * __mode
         errno = EPERM;  // 无权限
         return /*NULL*/0;
     }
-    return real_fopen64 ? real_fopen64(__filename,__modes) : /*NULL*/0;
+    return real_fopen64
+               ? real_fopen64(__filename,__modes)
+               : /*NULL*/0;
 }
 NHOOK_EXPORT long/*FILE**/ freopen64 (const char * __filename, const char * __modes, void/*FILE*/ * __stream)
 {
@@ -335,7 +410,9 @@ NHOOK_EXPORT long/*FILE**/ freopen64 (const char * __filename, const char * __mo
         errno = EPERM;  // 无权限
         return /*NULL*/0;
     }
-    return real_freopen64 ? real_freopen64(__filename,__modes,__stream) : /*NULL*/0;
+    return real_freopen64
+               ? real_freopen64(__filename,__modes,__stream)
+               : /*NULL*/0;
 }
 NHOOK_EXPORT long fclose (void *__stream)
 {
@@ -361,7 +438,9 @@ NHOOK_EXPORT long fclose (void *__stream)
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL){}
-    ret = (real_fclose ? real_fclose(__stream) : SYMBOL_IS_NOT_FOUND_IN_LIBC);
+    ret = (real_fclose
+               ? real_fclose(__stream)
+               : -1);
     if(__fd == tGClientSocket) tGClientSocket = -1; /*使下次使用socket会被重新初始化*/
     return ret;
 }
@@ -386,7 +465,7 @@ NHOOK_EXPORT long fcloseall (void)
     int ret = 0;
     int reinit = 0;
     int fd = -1, readlen = 0;
-    char dir[32] = {0}, names[1024] = {0};
+    char dir[64] = {0}, names[1024] = {0};
     snprintf(dir,sizeof(dir)-1,"/proc/%d/task/%d/fd",getpid(),mgettid());
     struct linux_dirent64 *dirp = NULL;
     do
@@ -424,7 +503,9 @@ NHOOK_EXPORT long fcloseall (void)
         }
     }while(0);
     if(fd >= 0 && real_close) real_close(fd);
-    ret = (real_fcloseall ? real_fcloseall() : SYMBOL_IS_NOT_FOUND_IN_LIBC);
+    ret = (real_fcloseall
+               ? real_fcloseall()
+               : -1);
     // 此时我们用来通讯的fd也可能被关闭了
     if(reinit)  unInitIpc();/*反初始化我们的socket，使下次使用socket会被重新初始化*/
     return ret;
@@ -453,7 +534,9 @@ NHOOK_EXPORT long unlink(const char *__name)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_unlink ? real_unlink(__name) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_unlink
+               ? real_unlink(__name)
+               : directCall(__NR_unlink,__name);
 }
 
 NHOOK_EXPORT long unlinkat(int __fd, const char *__name, int __flag)
@@ -478,7 +561,9 @@ NHOOK_EXPORT long unlinkat(int __fd, const char *__name, int __flag)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_unlinkat ? real_unlinkat(__fd,__name,__flag) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_unlinkat
+               ? real_unlinkat(__fd,__name,__flag)
+               : directCall(__NR_unlinkat,__fd,__name,__flag);
 }
 NHOOK_EXPORT long execve(const char *__path, char *const __argv[], char *const __envp[])
 {
@@ -502,7 +587,9 @@ NHOOK_EXPORT long execve(const char *__path, char *const __argv[], char *const _
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_execve ? real_execve(__path,(char *const*)__argv,(char *const*)__envp) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_execve
+               ? real_execve(__path,(char *const*)__argv,(char *const*)__envp)
+               : directCall(__NR_execve,__path,__argv,__envp);
 }
 NHOOK_EXPORT long execveat(int __fd, const char *__path, char *const __argv[], char *const __envp[], int __flags)
 {
@@ -526,7 +613,9 @@ NHOOK_EXPORT long execveat(int __fd, const char *__path, char *const __argv[], c
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_execveat ? real_execveat(__fd,__path,__argv,__envp,__flags) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_execveat
+               ? real_execveat(__fd,__path,__argv,__envp,__flags)
+               : directCall(__NR_execveat,__fd,__path,__argv,__envp,__flags);
 }
 NHOOK_EXPORT long fexecve(int __fd, char *const __argv[], char *const __envp[])
 {
@@ -549,7 +638,9 @@ NHOOK_EXPORT long fexecve(int __fd, char *const __argv[], char *const __envp[])
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_fexecve ? real_fexecve(__fd,__argv,__envp) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_fexecve
+               ? real_fexecve(__fd,__argv,__envp)
+               : -1;
 }
 NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const char *param_values, const struct module *mod)
 {
@@ -585,7 +676,9 @@ NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_init_module ? real_init_module(module_image,len,param_values,mod) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_init_module
+               ? real_init_module(module_image,len,param_values,mod)
+               : directCall(__NR_init_module,module_image,len,param_values,mod);
 }
 NHOOK_EXPORT long finit_module(int fd, const char *param_values,int flags)
 {
@@ -608,7 +701,9 @@ NHOOK_EXPORT long finit_module(int fd, const char *param_values,int flags)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_finit_module ? real_finit_module(fd,param_values,flags) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_finit_module
+               ? real_finit_module(fd,param_values,flags)
+               : directCall(__NR_finit_module,fd,param_values,flags);
 }
 NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
 {
@@ -632,7 +727,9 @@ NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_delete_module ? real_delete_module(name_user,flags) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_delete_module
+               ? real_delete_module(name_user,flags)
+               : directCall(__NR_delete_module,name_user,flags);
 }
 
 NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
@@ -664,6 +761,8 @@ NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_kill ? real_kill(__pid,__sig) : SYMBOL_IS_NOT_FOUND_IN_LIBC;
+    return real_kill
+               ? real_kill(__pid,__sig)
+               : directCall(__NR_kill,__pid,__sig);
 }
 

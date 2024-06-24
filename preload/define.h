@@ -19,7 +19,11 @@ typedef ret (*fc_##name) argvs;\
 fc_##name real_##name;
 // 批量声明函数指针类型
 CREATE_DEF(void*,dlsym,(void *, const char *))
-#define INIT_PTR(ret, name, args)  real_##name = (ret (*)args)real_dlsym(REAL_LIBC, #name)
+#define INIT_PTR(ret, name, args) \
+{ \
+    real_##name = (ret (*)args)real_dlsym(REAL_LIBC, #name); \
+    if(dlerror()) real_##name = NULL; \
+}
 
 struct module;
 struct sockaddr;
@@ -50,4 +54,6 @@ CREATE_DEF(long,kill,(__pid_t __pid, int __sig))
 // syscall 比较特殊，获取不到地址或者拿获取到的地址进行调用会段错误
 // 它是由LIBC进行特殊处理的
 CREATE_DEF(long,syscall,(long int __sysno, ...))
+CREATE_DEF(long,prctl,(int __option, ...))
+CREATE_DEF(long,seccomp,(unsigned int operation, unsigned int flags, ...))
 // 以下主要给ipcclient用

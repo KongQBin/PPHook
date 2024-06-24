@@ -38,6 +38,16 @@
 #define NET_CORE_WMEM_MAX 1
 #define NET_CORE_RMEM_MAX 2
 
+#ifndef PR_GET_SECCOMP
+    #define PR_GET_SECCOMP	21
+    #define PR_SET_SECCOMP	22
+    #define PR_SET_NO_NEW_PRIVS	38
+#endif
+#ifndef SECCOMP_SET_MODE_STRICT
+    #define SECCOMP_SET_MODE_STRICT		0
+    #define SECCOMP_SET_MODE_FILTER		1
+#endif
+
 extern ssize_t read (int __fd, void *__buf, size_t __n);
 extern ssize_t write (int __fd, const void *__buf, size_t __n);
 extern ssize_t readlink (const char *__restrict __path,char *__restrict __buf, size_t __len);
@@ -65,6 +75,8 @@ extern long init_module(const void *module_image, unsigned long len, const char 
 extern long finit_module(int fd, const char *param_values,int flags);
 extern long delete_module(const char *name_user, unsigned int flags);
 extern long kill(__pid_t __pid, int __sig);
+extern long prctl(int __option, ...);
+extern long seccomp(unsigned int operation, unsigned int flags, ...);
 #pragma GCC diagnostic pop
 #define mgettid()                    real_syscall(__NR_gettid)
 #define mgetdents64(fd,addr,size)    real_syscall(__NR_getdents64,fd,addr,size)

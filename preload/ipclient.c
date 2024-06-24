@@ -10,15 +10,20 @@ static CONTROL_INFO *gConfig = NULL;
  * 但在一些系统中，shm_open在librt库中，open函数在libc中，所以shm_open在调用时会再去查找open符号，
  * 当我们hook了open函数时，此处就会进入死循环 shm_open -> 我们的open -> initMmap -> shm_open。
  */
+extern void initSymbolAddr(void);
 int mshm_open(const char *name, const int oflag, const int mode)
 {
 
-    char path[256] = {0};
+    char path[64] = {0};
     const char *shm = "/dev/shm/";
     if(strlen(shm)+strlen(name) > sizeof(path)-1)
         return -1;
     snprintf(path,sizeof(path)-1,"%s%s",shm,name);
-    return real_open ? real_open(path,oflag,mode) : -1;
+    // 问题点real_open、real_open64调用崩溃
+    // initSymbolAddr(); // 重新初始化符号地址也会崩溃
+    // 切换 REAL_LIBC 也会崩溃
+    // 待处理。。。
+    return real_open64 ? real_open64(path,oflag,mode) : -1;
 }
 // 该函数不负责创建内存
 int initMmap() {
