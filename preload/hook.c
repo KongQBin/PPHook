@@ -27,6 +27,21 @@ int uptime()
     return !gUptime;
 }
 
+#define ToSysCall(func,sysno,ceret,...) \
+({ \
+long ret = -1; \
+if(func) \
+    ret = func(__VA_ARGS__); \
+else \
+{ \
+    if(sysno >= 0) \
+        ret = directCall(sysno,##__VA_ARGS__); \
+    else \
+        ret = ceret; \
+} \
+ret; \
+})
+
 NHOOK_EXPORT long prctl(int __option, ...)
 {
     int ret = -1;
@@ -39,12 +54,8 @@ NHOOK_EXPORT long prctl(int __option, ...)
     // 再者，我们的hook中不需要提权，故忽略即可
     if(/*PR_SET_NO_NEW_PRIVS != __option && */PR_GET_SECCOMP != __option
         && PR_SET_SECCOMP != __option)
-    {
-        if(real_prctl)
-            ret = real_prctl(__option,argv[0],argv[1],argv[2],argv[3],argv[4],argv[5],argv[6]);
-        else
-            ret = directCall(__NR_prctl,__option,argv[0],argv[1],argv[2],argv[3],argv[4],argv[5],argv[6]);
-    }
+        ret = ToSysCall(real_prctl,__NR_prctl,-1,__option,argv[0],
+                        argv[1],argv[2],argv[3],argv[4],argv[5],argv[6]);
     else
     {
         ret = -1;
@@ -63,12 +74,8 @@ NHOOK_EXPORT long seccomp(unsigned int operation, unsigned int flags, ...)
     for(int i=0;i<sizeof(argv)/sizeof(argv[0]);++i)
         argv[i] = va_arg(va_args, long);
     if(SECCOMP_SET_MODE_FILTER != operation)
-    {
-        if(real_seccomp)
-            ret = real_seccomp(operation,flags,argv[0],argv[1],argv[2],argv[3],argv[4],argv[5],argv[6]);
-        else
-            ret = directCall(__NR_seccomp,operation,flags,argv[0],argv[1],argv[2],argv[3],argv[4],argv[5],argv[6]);
-    }
+        ret = ToSysCall(real_seccomp,__NR_seccomp,-1,operation,flags,
+                        argv[0],argv[1],argv[2],argv[3],argv[4],argv[5],argv[6]);
     else
     {
         ret = -1;
@@ -117,9 +124,7 @@ NHOOK_EXPORT long rename (const char *__old, const char *__new)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_rename
-               ? real_rename(__old,__new)
-               : directCall(__NR_rename,__old,__new);
+    return ToSysCall(real_rename,__NR_rename,-1,__old,__new);
 }
 NHOOK_EXPORT long renameat (int __oldfd, const char *__old, int __newfd,
                     const char *__new)
@@ -144,9 +149,7 @@ NHOOK_EXPORT long renameat (int __oldfd, const char *__old, int __newfd,
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_renameat
-               ? real_renameat(__oldfd,__old,__newfd,__new)
-               : directCall(__NR_renameat,__oldfd,__old,__newfd,__new);
+    return ToSysCall(real_renameat,__NR_renameat,-1,__oldfd,__old,__newfd,__new);
 }
 NHOOK_EXPORT long renameat2 (int __oldfd, const char *__old, int __newfd,
                      const char *__new, unsigned int __flags)
@@ -174,9 +177,7 @@ NHOOK_EXPORT long renameat2 (int __oldfd, const char *__old, int __newfd,
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_renameat2
-               ? real_renameat2(__oldfd,__old,__newfd,__new,__flags)
-               : directCall(__NR_renameat2,__oldfd,__old,__newfd,__new,__flags);
+    return ToSysCall(real_renameat2,__NR_renameat2,-1,__oldfd,__old,__newfd,__new,__flags);
 }
 
 NHOOK_EXPORT long open(const char *path, int oflag, mode_t mode)
@@ -203,9 +204,7 @@ NHOOK_EXPORT long open(const char *path, int oflag, mode_t mode)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_open
-               ? real_open(path,oflag,mode)
-               : directCall(__NR_open,path,oflag,mode);
+    return ToSysCall(real_open,__NR_open,-1,path,oflag,mode);
 }
 NHOOK_EXPORT long open64(const char *path, int oflag, mode_t mode)
 {
@@ -236,9 +235,7 @@ NHOOK_EXPORT long open64(const char *path, int oflag, mode_t mode)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_open64
-               ? real_open64(path,oflag,mode)
-               : directCall(__NR_open,path,oflag,mode);
+    return ToSysCall(real_open64,__NR_open,-1,path,oflag,mode);
 }
 NHOOK_EXPORT long openat(int __fd, const char *__file, int __oflag, .../*mode_t*/)
 {
@@ -269,9 +266,7 @@ NHOOK_EXPORT long openat(int __fd, const char *__file, int __oflag, .../*mode_t*
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_openat
-               ? real_openat(__fd,__file,__oflag,mode)
-               : directCall(__NR_openat,__fd,__file,__oflag,mode);
+    return ToSysCall(real_openat,__NR_openat,-1,__fd,__file,__oflag,mode);
 }
 extern __thread int tGClientSocket;
 int getFdOpenFlag(pid_t gpid, pid_t pid, long fd);
@@ -296,9 +291,7 @@ NHOOK_EXPORT long close(int __fd)
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL){}
-    ret = (real_close
-               ? real_close(__fd)
-               : directCall(__NR_close,__fd));
+    ret = ToSysCall(real_close,__NR_close,-1,__fd);
     if(__fd == tGClientSocket) tGClientSocket = -1; /*使下次使用socket会被重新初始化*/
     return ret;
 }
@@ -326,9 +319,7 @@ NHOOK_EXPORT long/*FILE**/ fopen (const char * __filename, const char * __modes)
         errno = EPERM;  // 无权限
         return /*NULL*/0;
     }
-    return real_fopen
-               ? real_fopen(__filename,__modes)
-               : /*NULL*/0;
+    return ToSysCall(real_fopen,-1,0,__filename,__modes);
 }
 NHOOK_EXPORT long/*FILE**/ freopen (const char * __filename, const char * __modes, void/*FILE*/ * __stream)
 {
@@ -354,9 +345,7 @@ NHOOK_EXPORT long/*FILE**/ freopen (const char * __filename, const char * __mode
         errno = EPERM;  // 无权限
         return /*NULL*/0;
     }
-    return real_freopen
-               ? real_freopen(__filename,__modes,__stream)
-               : /*NULL*/0;
+    return ToSysCall(real_freopen,-1,0,__filename,__modes,__stream);
 }
 NHOOK_EXPORT long/*FILE**/ fopen64 (const char * __filename, const char * __modes)
 {
@@ -382,9 +371,7 @@ NHOOK_EXPORT long/*FILE**/ fopen64 (const char * __filename, const char * __mode
         errno = EPERM;  // 无权限
         return /*NULL*/0;
     }
-    return real_fopen64
-               ? real_fopen64(__filename,__modes)
-               : /*NULL*/0;
+    return ToSysCall(real_fopen64,-1,0,__filename,__modes);
 }
 NHOOK_EXPORT long/*FILE**/ freopen64 (const char * __filename, const char * __modes, void/*FILE*/ * __stream)
 {
@@ -410,9 +397,7 @@ NHOOK_EXPORT long/*FILE**/ freopen64 (const char * __filename, const char * __mo
         errno = EPERM;  // 无权限
         return /*NULL*/0;
     }
-    return real_freopen64
-               ? real_freopen64(__filename,__modes,__stream)
-               : /*NULL*/0;
+    return ToSysCall(real_freopen64,-1,0,__filename,__modes,__stream);
 }
 NHOOK_EXPORT long fclose (void *__stream)
 {
@@ -438,9 +423,7 @@ NHOOK_EXPORT long fclose (void *__stream)
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL){}
-    ret = (real_fclose
-               ? real_fclose(__stream)
-               : -1);
+    ret = ToSysCall(real_fclose,-1,-1,__stream);
     if(__fd == tGClientSocket) tGClientSocket = -1; /*使下次使用socket会被重新初始化*/
     return ret;
 }
@@ -503,9 +486,7 @@ NHOOK_EXPORT long fcloseall (void)
         }
     }while(0);
     if(fd >= 0 && real_close) real_close(fd);
-    ret = (real_fcloseall
-               ? real_fcloseall()
-               : -1);
+    ret = ToSysCall(real_fcloseall,-1,-1);
     // 此时我们用来通讯的fd也可能被关闭了
     if(reinit)  unInitIpc();/*反初始化我们的socket，使下次使用socket会被重新初始化*/
     return ret;
@@ -534,9 +515,7 @@ NHOOK_EXPORT long unlink(const char *__name)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_unlink
-               ? real_unlink(__name)
-               : directCall(__NR_unlink,__name);
+    return ToSysCall(real_unlink,__NR_unlink,-1,__name);
 }
 
 NHOOK_EXPORT long unlinkat(int __fd, const char *__name, int __flag)
@@ -561,9 +540,7 @@ NHOOK_EXPORT long unlinkat(int __fd, const char *__name, int __flag)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_unlinkat
-               ? real_unlinkat(__fd,__name,__flag)
-               : directCall(__NR_unlinkat,__fd,__name,__flag);
+    return ToSysCall(real_unlinkat,__NR_unlinkat,-1,__fd,__name,__flag);
 }
 NHOOK_EXPORT long execve(const char *__path, char *const __argv[], char *const __envp[])
 {
@@ -587,9 +564,7 @@ NHOOK_EXPORT long execve(const char *__path, char *const __argv[], char *const _
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_execve
-               ? real_execve(__path,(char *const*)__argv,(char *const*)__envp)
-               : directCall(__NR_execve,__path,__argv,__envp);
+    return ToSysCall(real_execve,__NR_execve,-1,__path,__argv,__envp);
 }
 NHOOK_EXPORT long execveat(int __fd, const char *__path, char *const __argv[], char *const __envp[], int __flags)
 {
@@ -613,9 +588,7 @@ NHOOK_EXPORT long execveat(int __fd, const char *__path, char *const __argv[], c
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_execveat
-               ? real_execveat(__fd,__path,__argv,__envp,__flags)
-               : directCall(__NR_execveat,__fd,__path,__argv,__envp,__flags);
+    return ToSysCall(real_execveat,__NR_execveat,-1,__fd,__path,__argv,__envp,__flags);
 }
 NHOOK_EXPORT long fexecve(int __fd, char *const __argv[], char *const __envp[])
 {
@@ -638,9 +611,7 @@ NHOOK_EXPORT long fexecve(int __fd, char *const __argv[], char *const __envp[])
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_fexecve
-               ? real_fexecve(__fd,__argv,__envp)
-               : -1;
+    return ToSysCall(real_fexecve,-1,-1,__fd,__argv,__envp);
 }
 NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const char *param_values, const struct module *mod)
 {
@@ -676,9 +647,7 @@ NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_init_module
-               ? real_init_module(module_image,len,param_values,mod)
-               : directCall(__NR_init_module,module_image,len,param_values,mod);
+    return ToSysCall(real_init_module,__NR_init_module,-1,module_image,len,param_values,mod);
 }
 NHOOK_EXPORT long finit_module(int fd, const char *param_values,int flags)
 {
@@ -701,9 +670,7 @@ NHOOK_EXPORT long finit_module(int fd, const char *param_values,int flags)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_finit_module
-               ? real_finit_module(fd,param_values,flags)
-               : directCall(__NR_finit_module,fd,param_values,flags);
+    return ToSysCall(real_finit_module,__NR_finit_module,-1,fd,param_values,flags);
 }
 NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
 {
@@ -727,9 +694,7 @@ NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_delete_module
-               ? real_delete_module(name_user,flags)
-               : directCall(__NR_delete_module,name_user,flags);
+    return ToSysCall(real_delete_module,__NR_delete_module,-1,name_user,flags);
 }
 
 NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
@@ -761,8 +726,6 @@ NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
         errno = EPERM;  // 无权限
         return -1;
     }
-    return real_kill
-               ? real_kill(__pid,__sig)
-               : directCall(__NR_kill,__pid,__sig);
+    return ToSysCall(real_kill,__NR_kill,-1,__pid,__sig);
 }
 
