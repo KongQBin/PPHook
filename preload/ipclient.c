@@ -1,6 +1,8 @@
 #include "ipclient.h"
 // __thread 利用TLS(Thread Local Storage)
 // 机制，保证线程间不去共享这个变量
+ // 定义 TLS 键
+pthread_key_t tAutoCloseSktKey;
 __thread int tGClientSocket = -1;
 static CONTROL_INFO *gConfig = NULL;
 // 创建内存映射虚拟文件
@@ -66,7 +68,12 @@ int unInitIpc()
 //    gConfig = NULL;
     return 0;
 }
-
+// 定义 TLS 值的析构函数
+void closeTlsSocket(void *sktfd)
+{
+    // 关闭套接字
+    unInitIpc();
+}
 
 int getSysConfig(const char *path,long *num)
 {
@@ -90,6 +97,13 @@ int initIpc()
         // 创建域套接字
         tGClientSocket = socket(AF_UNIX, SOCK_STREAM, 0);
         if (--ret && tGClientSocket == -1) break;
+        int flags = fcntl(closeTlsSocket, F_GETFD);
+        if (flags != -1 && flags&FD_CLOEXEC)
+            fcntl(closeTlsSocket, F_SETFD, flags & ~FD_CLOEXEC);
+        // 指定TLS自析构函数
+        pthread_key_create(&tAutoCloseSktKey, closeTlsSocket);
+        // tGClientSocket可以不在closeTlsSocket用，但必须要有，否则不会自动调用析构
+        pthread_setspecific(tAutoCloseSktKey, &tGClientSocket);
 
         // 获取最大读写缓冲区大小
         long max_send_buf_size,max_recv_buf_size;
@@ -147,7 +161,7 @@ int sendMsg(PCOMMON_DATA msg)
         {
             if(send(tGClientSocket, msg, sizeof(COMMON_DATA), MSG_NOSIGNAL) != sizeof(COMMON_DATA))
             {
-                printf("send2 :: %s(%d) tGClientSocket = %d\n",strerror(errno),errno,tGClientSocket);
+//                printf("send2 :: %s(%d) tGClientSocket = %d\n",strerror(errno),errno,tGClientSocket);
                 return -3;
             }
         }
@@ -195,7 +209,7 @@ int recvMsg(CONTROL_INFO *msg)
         {
             // 判断当前决定阻塞的开关是否被关闭
             // 如果满足任意条件，则退出等待，立即返回
-            if(!getOnoff(tp) || !getBackwait(tp))   break;
+            if(!getOnoff(tp) || !getBackwait(tp)) break;
             else continue;
         }
         else
@@ -207,4 +221,14 @@ int recvMsg(CONTROL_INFO *msg)
     // 等待过程出现错误，反初始化ipc
     if(ret) unInitIpc();
     return ret;
+}
+
+void toInteractive(PCOMMON_DATA smsg,CONTROL_INFO *rmsg)
+{
+    TRACE_POINT tp = rmsg->tp;
+    if(getOnoff(tp) && !sendMsg(smsg))
+    {
+        if(getOnoff(tp) && getBackwait(tp))
+            if(recvMsg(rmsg)) rmsg->dec = D_ALLOW;
+    }
 }

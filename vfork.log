@@ -1,0 +1,334 @@
+[pid 32370] vfork(strace: Process 38206 attached
+ <unfinished ...>
+[pid 38206] rt_sigprocmask(SIG_SETMASK, [], ~[KILL STOP RTMIN RT_1], 8) = 0
+[pid 38206] readlink("/usr", 0x7ffc309f4af0, 1023) = -1 EINVAL (无效的参数)
+[pid 38206] readlink("/usr/share", 0x7ffc309f4af0, 1023) = -1 EINVAL (无效的参数)
+[pid 38206] readlink("/usr/share/initramfs-tools", 0x7ffc309f4af0, 1023) = -1 EINVAL (无效的参数)
+[pid 38206] readlink("/usr/share/initramfs-tools/hooks", 0x7ffc309f4af0, 1023) = -1 EINVAL (无效的参数)
+[pid 38206] readlink("/usr/share/initramfs-tools/hooks/amd64_microcode", 0x7ffc309f4af0, 1023) = -1 EINVAL (无效的参数)
+[pid 38206] access("/usr/share/initramfs-tools/hooks/amd64_microcode", F_OK) = 0
+[pid 38206] getpid()                    = 38206
+[pid 38206] gettid()                    = 38206
+[pid 38206] sendto(13, ">\225\0\0\0\0\0\0>\225\0\0\0\0\0\0\5\0\0\0000\0\0\0\0\0\0\0\0\0\0\0"..., 24648, MSG_NOSIGNAL, NULL, 0) = 24648
+[pid 38206] recvfrom(13, ">\225\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\5\0\0\0", 24, 0, NULL, NULL) = 24
+[pid 38206] gettid()                    = 38206
+[pid 38206] execve("/usr/share/initramfs-tools/hooks/amd64_microcode", ["/usr/share/initramfs-tools/hooks"...], 0x5b69708a6908 /* 47 vars */ <unfinished ...>					<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<execve
+[pid 32370] <... vfork resumed>)        = 38206
+[pid 32370] rt_sigprocmask(SIG_SETMASK, [], ~[KILL STOP RTMIN RT_1], 8) = 0
+[pid 32370] wait4(-1,  <unfinished ...>
+[pid 38206] <... execve resumed>)       = 0
+[pid 38206] brk(NULL)                   = 0x5a1218304000
+[pid 38206] arch_prctl(0x3001 /* ARCH_??? */, 0x7ffe3bf19b10) = -1 EINVAL (无效的参数)
+[pid 38206] mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x77ab8c737000
+[pid 38206] access("/etc/ld.so.preload", R_OK) = 0
+[pid 38206] openat(AT_FDCWD, "/etc/ld.so.preload", O_RDONLY|O_CLOEXEC) = 9
+[pid 38206] newfstatat(9, "", {st_mode=S_IFREG|0644, st_size=17, ...}, AT_EMPTY_PATH) = 0
+[pid 38206] mmap(NULL, 17, PROT_READ|PROT_WRITE, MAP_PRIVATE, 9, 0) = 0x77ab8c770000
+[pid 38206] close(9)                    = 0
+[pid 38206] openat(AT_FDCWD, "/etc/libnhook.so", O_RDONLY|O_CLOEXEC) = 9
+[pid 38206] read(9, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\240\31\0\0\0\0\0\0"..., 832) = 832
+[pid 38206] newfstatat(9, "", {st_mode=S_IFREG|0664, st_size=41488, ...}, AT_EMPTY_PATH) = 0
+[pid 38206] mmap(NULL, 4226568, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x77ab8c32f000
+[pid 38206] mmap(0x77ab8c400000, 2129416, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 9, 0) = 0x77ab8c400000
+[pid 38206] munmap(0x77ab8c32f000, 856064) = 0
+[pid 38206] munmap(0x77ab8c608000, 1240584) = 0
+[pid 38206] mprotect(0x77ab8c408000, 2093056, PROT_NONE) = 0
+[pid 38206] mmap(0x77ab8c607000, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 9, 0x7000) = 0x77ab8c607000
+[pid 38206] close(9)                    = 0
+[pid 38206] munmap(0x77ab8c770000, 17)  = 0
+[pid 38206] openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 9
+[pid 38206] newfstatat(9, "", {st_mode=S_IFREG|0644, st_size=57491, ...}, AT_EMPTY_PATH) = 0
+[pid 38206] mmap(NULL, 57491, PROT_READ, MAP_PRIVATE, 9, 0) = 0x77ab8c728000
+[pid 38206] close(9)                    = 0
+[pid 38206] openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 9
+[pid 38206] read(9, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0P\237\2\0\0\0\0\0"..., 832) = 832
+[pid 38206] pread64(9, "\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0"..., 784, 64) = 784
+[pid 38206] pread64(9, "\4\0\0\0 \0\0\0\5\0\0\0GNU\0\2\0\0\300\4\0\0\0\3\0\0\0\0\0\0\0"..., 48, 848) = 48
+[pid 38206] pread64(9, "\4\0\0\0\24\0\0\0\3\0\0\0GNU\0I\17\357\204\3$\f\221\2039x\324\224\323\236S"..., 68, 896) = 68
+[pid 38206] newfstatat(9, "", {st_mode=S_IFREG|0755, st_size=2220400, ...}, AT_EMPTY_PATH) = 0
+[pid 38206] pread64(9, "\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0"..., 784, 64) = 784
+[pid 38206] mmap(NULL, 2264656, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 9, 0) = 0x77ab8c000000
+[pid 38206] mprotect(0x77ab8c028000, 2023424, PROT_NONE) = 0
+[pid 38206] mmap(0x77ab8c028000, 1658880, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 9, 0x28000) = 0x77ab8c028000
+[pid 38206] mmap(0x77ab8c1bd000, 360448, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 9, 0x1bd000) = 0x77ab8c1bd000
+[pid 38206] mmap(0x77ab8c216000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 9, 0x215000) = 0x77ab8c216000
+[pid 38206] mmap(0x77ab8c21c000, 52816, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x77ab8c21c000
+[pid 38206] close(9)                    = 0
+[pid 38206] openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libdl.so.2", O_RDONLY|O_CLOEXEC) = 9
+[pid 38206] read(9, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0\0\0\0\0\0\0\0"..., 832) = 832
+[pid 38206] newfstatat(9, "", {st_mode=S_IFREG|0644, st_size=14432, ...}, AT_EMPTY_PATH) = 0
+[pid 38206] mmap(NULL, 16424, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 9, 0) = 0x77ab8c723000
+[pid 38206] mmap(0x77ab8c724000, 4096, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 9, 0x1000) = 0x77ab8c724000
+[pid 38206] mmap(0x77ab8c725000, 4096, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 9, 0x2000) = 0x77ab8c725000
+[pid 38206] mmap(0x77ab8c726000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 9, 0x2000) = 0x77ab8c726000
+[pid 38206] close(9)                    = 0
+[pid 38206] openat(AT_FDCWD, "/lib/x86_64-linux-gnu/librt.so.1", O_RDONLY|O_CLOEXEC) = 9
+[pid 38206] read(9, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0\0\0\0\0\0\0\0"..., 832) = 832
+[pid 38206] newfstatat(9, "", {st_mode=S_IFREG|0644, st_size=14664, ...}, AT_EMPTY_PATH) = 0
+[pid 38206] mmap(NULL, 16440, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 9, 0) = 0x77ab8c71e000
+[pid 38206] mmap(0x77ab8c71f000, 4096, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 9, 0x1000) = 0x77ab8c71f000
+[pid 38206] mmap(0x77ab8c720000, 4096, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 9, 0x2000) = 0x77ab8c720000
+[pid 38206] mmap(0x77ab8c721000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 9, 0x2000) = 0x77ab8c721000
+[pid 38206] close(9)                    = 0
+[pid 38206] mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x77ab8c71c000
+[pid 38206] arch_prctl(ARCH_SET_FS, 0x77ab8c71d180) = 0
+[pid 38206] set_tid_address(0x77ab8c71d450) = 38206
+[pid 38206] set_robust_list(0x77ab8c71d460, 24) = 0
+[pid 38206] rseq(0x77ab8c71db20, 0x20, 0, 0x53053053) = 0
+[pid 38206] mprotect(0x77ab8c216000, 16384, PROT_READ) = 0
+[pid 38206] mprotect(0x77ab8c721000, 4096, PROT_READ) = 0
+[pid 38206] mprotect(0x77ab8c726000, 4096, PROT_READ) = 0
+[pid 38206] mprotect(0x5a121777a000, 8192, PROT_READ) = 0
+[pid 38206] mprotect(0x77ab8c771000, 8192, PROT_READ) = 0
+[pid 38206] prlimit64(0, RLIMIT_STACK, NULL, {rlim_cur=8192*1024, rlim_max=RLIM64_INFINITY}) = 0
+[pid 38206] munmap(0x77ab8c728000, 57491) = 0
+[pid 38206] getrandom("\x0c\xa7\x6f\x85\x9c\xb7\x6c\x82", 8, GRND_NONBLOCK) = 8
+[pid 38206] brk(NULL)                   = 0x5a1218304000
+[pid 38206] brk(0x5a1218325000)         = 0x5a1218325000
+[pid 38206] mkdir("/tmp/nhook/", 0777)  = -1 EEXIST (文件已存在)
+[pid 38206] openat(AT_FDCWD, "/tmp/nhook/plog", O_WRONLY|O_CREAT|O_APPEND, 0777) = 9
+[pid 38206] chmod("/tmp/nhook/plog", 0777) = 0
+[pid 38206] getuid()                    = 0
+[pid 38206] getgid()                    = 0
+[pid 38206] getpid()                    = 38206
+[pid 38206] rt_sigaction(SIGCHLD, {sa_handler=0x5a1217770aa0, sa_mask=~[RTMIN RT_1], sa_flags=SA_RESTORER, sa_restorer=0x77ab8c042520}, NULL, 8) = 0
+[pid 38206] geteuid()                   = 0
+[pid 38206] getppid()                   = 32370
+[pid 38206] newfstatat(AT_FDCWD, "/", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+[pid 38206] newfstatat(AT_FDCWD, ".", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+[pid 38206] sysinfo({uptime=1241, loads=[168832, 76640, 37760], totalram=4058644480, freeram=175210496, sharedram=56344576, bufferram=200245248, totalswap=4087345152, freeswap=4087070720, procs=711, totalhigh=0, freehigh=0, mem_unit=1}) = 0
+[pid 38206] openat(AT_FDCWD, "/dev/shm/syshook.mmap", O_RDWR) = 10
+[pid 38206] mmap(NULL, 360, PROT_READ, MAP_SHARED, 10, 0) = 0x77ab8c770000
+[pid 38206] close(10)                   = 0
+[pid 38206] openat(AT_FDCWD, "/usr/share/initramfs-tools/hooks/amd64_microcode", O_RDONLY) = 10
+[pid 38206] geteuid()                   = 0
+[pid 38206] getegid()                   = 0
+[pid 38206] rt_sigaction(SIGINT, NULL, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+[pid 38206] rt_sigaction(SIGINT, {sa_handler=0x5a1217770aa0, sa_mask=~[RTMIN RT_1], sa_flags=SA_RESTORER, sa_restorer=0x77ab8c042520}, NULL, 8) = 0
+[pid 38206] rt_sigaction(SIGQUIT, NULL, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+[pid 38206] rt_sigaction(SIGQUIT, {sa_handler=SIG_DFL, sa_mask=~[RTMIN RT_1], sa_flags=SA_RESTORER, sa_restorer=0x77ab8c042520}, NULL, 8) = 0
+[pid 38206] rt_sigaction(SIGTERM, NULL, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+[pid 38206] rt_sigaction(SIGTERM, {sa_handler=SIG_DFL, sa_mask=~[RTMIN RT_1], sa_flags=SA_RESTORER, sa_restorer=0x77ab8c042520}, NULL, 8) = 0
+[pid 38206] read(10, "#!/bin/sh\n# amd64-microcode init"..., 8192) = 3856
+[pid 38206] openat(AT_FDCWD, "/usr/share/initramfs-tools/hook-functions", O_RDONLY) = 12
+[pid 38206] read(12, "# -*- shell-script -*-\n\ncatenate"..., 8192) = 8192
+[pid 38206] read(12, "\" = \"y\" ]; then\n\t\techo \"Copying "..., 8192) = 8192
+[pid 38206] read(12, "odules ide-gd_mod ide-cd\"\n\tfi\n\n\t"..., 8192) = 8192
+[pid 38206] read(12, "\n}\n\nget_prereq_pairs()\n{\n\tset_in"..., 8192) = 2564
+[pid 38206] read(12, "", 8192)          = 0
+[pid 38206] gettid()                    = 38206
+[pid 38206] getpid()                    = 38206
+[pid 38206] openat(AT_FDCWD, "/proc/38206/task/38206/fdinfo/12", O_RDONLY) = 14
+[pid 38206] read(14, "pos:\t27140\nflags:\t0100000\nmnt_id"..., 511) = 50
+[pid 38206] close(14)                   = 0
+[pid 38206] close(12)                   = 0
+[pid 38206] faccessat2(AT_FDCWD, "/etc/default/amd64-microcode", R_OK, AT_EACCESS) = 0
+[pid 38206] openat(AT_FDCWD, "/etc/default/amd64-microcode", O_RDONLY) = 12
+[pid 38206] read(12, "# Configuration script for amd64"..., 8192) = 328
+[pid 38206] read(12, "", 8192)          = 0
+[pid 38206] gettid()                    = 38206
+[pid 38206] getpid()                    = 38206
+[pid 38206] openat(AT_FDCWD, "/proc/38206/task/38206/fdinfo/12", O_RDONLY) = 14
+[pid 38206] read(14, "pos:\t328\nflags:\t0100000\nmnt_id:\t"..., 511) = 48
+[pid 38206] close(14)                   = 0
+[pid 38206] close(12)                   = 0
+[pid 38206] newfstatat(AT_FDCWD, "/lib/firmware/amd-ucode", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+[pid 38206] newfstatat(AT_FDCWD, "/usr/bin/dpkg", {st_mode=S_IFREG|0755, st_size=318144, ...}, 0) = 0
+[pid 38206] rt_sigprocmask(SIG_SETMASK, ~[RTMIN RT_1], NULL, 8) = 0
+[pid 38206] vfork(strace: Process 38207 attached																												<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<vfork
+ <unfinished ...>
+[pid 38207] rt_sigprocmask(SIG_SETMASK, [], ~[KILL STOP RTMIN RT_1], 8) = 0
+[pid 38207] brk(0x5a1218346000)         = 0x5a1218346000
+[pid 38207] readlink("/usr", 0x7ffe3bf18cd0, 1023) = -1 EINVAL (无效的参数)
+[pid 38207] readlink("/usr/bin", 0x7ffe3bf18cd0, 1023) = -1 EINVAL (无效的参数)
+[pid 38207] readlink("/usr/bin/dpkg", 0x7ffe3bf18cd0, 1023) = -1 EINVAL (无效的参数)
+[pid 38207] access("/usr/bin/dpkg", F_OK) = 0
+[pid 38207] getpid()                    = 38207
+[pid 38207] gettid()                    = 38207
+[pid 38207] socket(AF_UNIX, SOCK_STREAM, 0) = 12																											<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<socket 12
+[pid 38207] openat(AT_FDCWD, "/proc/sys/net/core/rmem_max", O_RDONLY) = 14
+[pid 38207] newfstatat(14, "", {st_mode=S_IFREG|0644, st_size=0, ...}, AT_EMPTY_PATH) = 0
+[pid 38207] read(14, "212992\n", 1024)  = 7
+[pid 38207] close(14)                   = 0
+[pid 38207] openat(AT_FDCWD, "/proc/sys/net/core/wmem_max", O_RDONLY) = 14
+[pid 38207] newfstatat(14, "", {st_mode=S_IFREG|0644, st_size=0, ...}, AT_EMPTY_PATH) = 0
+[pid 38207] read(14, "212992\n", 1024)  = 7
+[pid 38207] close(14)                   = 0
+[pid 38207] setsockopt(12, SOL_SOCKET, SO_RCVBUF, "\0@\3\0\0\0\0\0", 8) = 0
+[pid 38207] setsockopt(12, SOL_SOCKET, SO_SNDBUF, "\0@\3\0\0\0\0\0", 8) = 0
+[pid 38207] setsockopt(12, SOL_SOCKET, SO_RCVTIMEO_OLD, "\24\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 16) = 0
+[pid 38207] connect(12, {sa_family=AF_UNIX, sun_path="/tmp/syshook.skt"}, 110) = 0
+[pid 38207] sendto(12, "?\225\0\0\0\0\0\0?\225\0\0\0\0\0\0\5\0\0\0\r\0\0\0\0\0\0\0\0\0\0\0"..., 24648, MSG_NOSIGNAL, NULL, 0) = 24648
+[pid 38207] recvfrom(12, "?\225\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\5\0\0\0", 24, 0, NULL, NULL) = 24
+[pid 38207] gettid()                    = 38207
+[pid 38207] brk(0x5a1218340000)         = 0x5a1218340000
+[pid 38207] execve("/usr/bin/dpkg", ["dpkg", "--compare-versions", "6.5.0-41-generic", "lt", "3.14"], 0x5a1218313b58 /* 47 vars */ <unfinished ...>									<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<execve
+[pid 38206] <... vfork resumed>)        = 38207
+[pid 38207] <... execve resumed>)       = 0
+[pid 38206] rt_sigprocmask(SIG_SETMASK, [],  <unfinished ...>
+[pid 38207] brk(NULL <unfinished ...>
+[pid 38206] <... rt_sigprocmask resumed>~[KILL STOP RTMIN RT_1], 8) = 0
+[pid 38207] <... brk resumed>)          = 0x62b7de586000
+[pid 38206] wait4(-1,  <unfinished ...>
+[pid 38207] arch_prctl(0x3001 /* ARCH_??? */, 0x7fff02fd6f50) = -1 EINVAL (无效的参数)
+[pid 38207] mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7c2c2980b000
+[pid 38207] access("/etc/ld.so.preload", R_OK) = 0
+[pid 38207] openat(AT_FDCWD, "/etc/ld.so.preload", O_RDONLY|O_CLOEXEC) = 14
+[pid 38207] newfstatat(14, "", {st_mode=S_IFREG|0644, st_size=17, ...}, AT_EMPTY_PATH) = 0
+[pid 38207] mmap(NULL, 17, PROT_READ|PROT_WRITE, MAP_PRIVATE, 14, 0) = 0x7c2c29844000
+[pid 38207] close(14)                   = 0
+[pid 38207] openat(AT_FDCWD, "/etc/libnhook.so", O_RDONLY|O_CLOEXEC) = 14
+[pid 38207] read(14, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\240\31\0\0\0\0\0\0"..., 832) = 832
+[pid 38207] newfstatat(14, "", {st_mode=S_IFREG|0664, st_size=41488, ...}, AT_EMPTY_PATH) = 0
+[pid 38207] mmap(NULL, 4226568, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7c2c29403000
+[pid 38207] mmap(0x7c2c29600000, 2129416, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0) = 0x7c2c29600000
+[pid 38207] munmap(0x7c2c29403000, 2084864) = 0
+[pid 38207] munmap(0x7c2c29808000, 11784) = 0
+[pid 31928] <... pselect6 resumed>)     = 0 (Timeout)
+[pid 38207] mprotect(0x7c2c29608000, 2093056, PROT_NONE <unfinished ...>
+[pid 31928] wait4(32346, 0x7ffd16ad1d10, WNOHANG, NULL) = 0
+[pid 38207] <... mprotect resumed>)     = 0
+[pid 31928] pselect6(63, [0 60 62], NULL, NULL, {tv_sec=0, tv_nsec=50000000}, {sigmask=[], sigsetsize=8} <unfinished ...>
+[pid 38207] mmap(0x7c2c29807000, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x7000) = 0x7c2c29807000
+[pid 38207] close(14)                   = 0
+[pid 38207] munmap(0x7c2c29844000, 17)  = 0
+[pid 38207] openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 14
+[pid 38207] newfstatat(14, "", {st_mode=S_IFREG|0644, st_size=57491, ...}, AT_EMPTY_PATH) = 0
+[pid 38207] mmap(NULL, 57491, PROT_READ, MAP_PRIVATE, 14, 0) = 0x7c2c295f1000
+[pid 38207] close(14)                   = 0
+[pid 38207] openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libselinux.so.1", O_RDONLY|O_CLOEXEC) = 14
+[pid 38207] read(14, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0\0\0\0\0\0\0\0"..., 832) = 832
+[pid 38207] newfstatat(14, "", {st_mode=S_IFREG|0644, st_size=166280, ...}, AT_EMPTY_PATH) = 0
+[pid 38207] mmap(NULL, 177672, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 14, 0) = 0x7c2c295c5000
+[pid 38207] mprotect(0x7c2c295cb000, 139264, PROT_NONE) = 0
+[pid 38207] mmap(0x7c2c295cb000, 106496, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x6000) = 0x7c2c295cb000
+[pid 38207] mmap(0x7c2c295e5000, 28672, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x20000) = 0x7c2c295e5000
+[pid 38207] mmap(0x7c2c295ed000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x27000) = 0x7c2c295ed000
+[pid 38207] mmap(0x7c2c295ef000, 5640, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7c2c295ef000
+[pid 38207] close(14)                   = 0
+[pid 38207] openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 14
+[pid 38207] read(14, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0P\237\2\0\0\0\0\0"..., 832) = 832
+[pid 38207] pread64(14, "\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0"..., 784, 64) = 784
+[pid 38207] pread64(14, "\4\0\0\0 \0\0\0\5\0\0\0GNU\0\2\0\0\300\4\0\0\0\3\0\0\0\0\0\0\0"..., 48, 848) = 48
+[pid 38207] pread64(14, "\4\0\0\0\24\0\0\0\3\0\0\0GNU\0I\17\357\204\3$\f\221\2039x\324\224\323\236S"..., 68, 896) = 68
+[pid 38207] newfstatat(14, "", {st_mode=S_IFREG|0755, st_size=2220400, ...}, AT_EMPTY_PATH) = 0
+[pid 38207] pread64(14, "\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0"..., 784, 64) = 784
+[pid 38207] mmap(NULL, 2264656, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 14, 0) = 0x7c2c29200000
+[pid 38207] mprotect(0x7c2c29228000, 2023424, PROT_NONE) = 0
+[pid 38207] mmap(0x7c2c29228000, 1658880, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x28000) = 0x7c2c29228000
+[pid 38207] mmap(0x7c2c293bd000, 360448, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x1bd000) = 0x7c2c293bd000
+[pid 38207] mmap(0x7c2c29416000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x215000) = 0x7c2c29416000
+[pid 38207] mmap(0x7c2c2941c000, 52816, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7c2c2941c000
+[pid 38207] close(14)                   = 0
+[pid 38207] openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libdl.so.2", O_RDONLY|O_CLOEXEC) = 14
+[pid 38207] read(14, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0\0\0\0\0\0\0\0"..., 832) = 832
+[pid 38207] newfstatat(14, "", {st_mode=S_IFREG|0644, st_size=14432, ...}, AT_EMPTY_PATH) = 0
+[pid 38207] mmap(NULL, 16424, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 14, 0) = 0x7c2c295c0000
+[pid 38207] mmap(0x7c2c295c1000, 4096, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x1000) = 0x7c2c295c1000
+[pid 38207] mmap(0x7c2c295c2000, 4096, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x2000) = 0x7c2c295c2000
+[pid 38207] mmap(0x7c2c295c3000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x2000) = 0x7c2c295c3000
+[pid 38207] close(14)                   = 0
+[pid 38207] openat(AT_FDCWD, "/lib/x86_64-linux-gnu/librt.so.1", O_RDONLY|O_CLOEXEC) = 14
+[pid 38207] read(14, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0\0\0\0\0\0\0\0"..., 832) = 832
+[pid 38207] newfstatat(14, "", {st_mode=S_IFREG|0644, st_size=14664, ...}, AT_EMPTY_PATH) = 0
+[pid 38207] mmap(NULL, 16440, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 14, 0) = 0x7c2c295bb000
+[pid 38207] mmap(0x7c2c295bc000, 4096, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x1000) = 0x7c2c295bc000
+[pid 38207] mmap(0x7c2c295bd000, 4096, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x2000) = 0x7c2c295bd000
+[pid 38207] mmap(0x7c2c295be000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x2000) = 0x7c2c295be000
+[pid 38207] close(14)                   = 0
+[pid 38207] openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libpcre2-8.so.0", O_RDONLY|O_CLOEXEC) = 14
+[pid 38207] read(14, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0\0\0\0\0\0\0\0"..., 832) = 832
+[pid 38207] newfstatat(14, "", {st_mode=S_IFREG|0644, st_size=613064, ...}, AT_EMPTY_PATH) = 0
+[pid 38207] mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7c2c29809000
+[pid 38207] mmap(NULL, 615184, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 14, 0) = 0x7c2c29524000
+[pid 38207] mmap(0x7c2c29526000, 438272, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x2000) = 0x7c2c29526000
+[pid 38207] mmap(0x7c2c29591000, 163840, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x6d000) = 0x7c2c29591000
+[pid 38207] mmap(0x7c2c295b9000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 14, 0x94000) = 0x7c2c295b9000
+[pid 38207] close(14)                   = 0
+[pid 38207] mmap(NULL, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7c2c29521000
+[pid 38207] arch_prctl(ARCH_SET_FS, 0x7c2c29521800) = 0
+[pid 38207] set_tid_address(0x7c2c29521ad0) = 38207
+[pid 38207] set_robust_list(0x7c2c29521ae0, 24) = 0
+[pid 38207] rseq(0x7c2c295221a0, 0x20, 0, 0x53053053) = 0
+[pid 38207] mprotect(0x7c2c29416000, 16384, PROT_READ) = 0
+[pid 38207] mprotect(0x7c2c295b9000, 4096, PROT_READ) = 0
+[pid 38207] mprotect(0x7c2c295be000, 4096, PROT_READ) = 0
+[pid 38207] mprotect(0x7c2c295c3000, 4096, PROT_READ) = 0
+[pid 38207] mprotect(0x7c2c295ed000, 4096, PROT_READ) = 0
+[pid 38207] mprotect(0x62b7dc7f7000, 12288, PROT_READ) = 0
+[pid 38207] mprotect(0x7c2c29845000, 8192, PROT_READ) = 0
+[pid 38207] prlimit64(0, RLIMIT_STACK, NULL, {rlim_cur=8192*1024, rlim_max=RLIM64_INFINITY}) = 0
+[pid 38207] munmap(0x7c2c295f1000, 57491) = 0
+[pid 38207] statfs("/sys/fs/selinux", 0x7fff02fd6f90) = -1 ENOENT (没有那个文件或目录)
+[pid 38207] statfs("/selinux", 0x7fff02fd6f90) = -1 ENOENT (没有那个文件或目录)
+[pid 38207] sysinfo({uptime=1241, loads=[168832, 76640, 37760], totalram=4058644480, freeram=174952448, sharedram=56344576, bufferram=200245248, totalswap=4087345152, freeswap=4087070720, procs=712, totalhigh=0, freehigh=0, mem_unit=1}) = 0
+[pid 38207] access("/etc/selinux/config", F_OK) = -1 ENOENT (没有那个文件或目录)
+[pid 38207] getrandom("\xa2\x8b\x92\x33\x2f\xf5\xa2\xfe", 8, GRND_NONBLOCK) = 8
+[pid 38207] brk(NULL)                   = 0x62b7de586000
+[pid 38207] brk(0x62b7de5a7000)         = 0x62b7de5a7000
+[pid 38207] mkdir("/tmp/nhook/", 0777)  = -1 EEXIST (文件已存在)
+[pid 38207] openat(AT_FDCWD, "/tmp/nhook/plog", O_WRONLY|O_CREAT|O_APPEND, 0777) = 14
+[pid 38207] chmod("/tmp/nhook/plog", 0777) = 0
+[pid 38207] openat(AT_FDCWD, "/usr/lib/locale/locale-archive", O_RDONLY|O_CLOEXEC) = 15
+[pid 38207] newfstatat(15, "", {st_mode=S_IFREG|0644, st_size=8876560, ...}, AT_EMPTY_PATH) = 0
+[pid 38207] mmap(NULL, 8876560, PROT_READ, MAP_PRIVATE, 15, 0) = 0x7c2c28800000
+[pid 38207] close(15)                   = 0
+[pid 38207] ioctl(1, TCGETS, {B38400 opost isig icanon echo ...}) = 0
+[pid 38207] umask(022)                  = 022
+[pid 38207] openat(AT_FDCWD, "/etc/dpkg/dpkg.cfg.d", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 15
+[pid 38207] newfstatat(15, "", {st_mode=S_IFDIR|0755, st_size=4096, ...}, AT_EMPTY_PATH) = 0
+[pid 38207] getdents64(15, 0x62b7de587590 /* 2 entries */, 32768) = 48
+[pid 38207] getdents64(15, 0x62b7de587590 /* 0 entries */, 32768) = 0
+[pid 38207] close(15)                   = 0
+[pid 38207] openat(AT_FDCWD, "/dev/shm/syshook.mmap", O_RDWR) = 15
+[pid 38207] mmap(NULL, 360, PROT_READ, MAP_SHARED, 15, 0) = 0x7c2c29844000
+[pid 38207] close(15)                   = 0
+[pid 38207] openat(AT_FDCWD, "/etc/dpkg/dpkg.cfg", O_RDONLY) = 15
+[pid 38207] newfstatat(15, "", {st_mode=S_IFREG|0644, st_size=446, ...}, AT_EMPTY_PATH) = 0
+[pid 38207] read(15, "# dpkg configuration file\n#\n# Th"..., 4096) = 446
+[pid 38207] read(15, "", 4096)          = 0
+[pid 38207] gettid()                    = 38207
+[pid 38207] getpid()                    = 38207
+[pid 38207] openat(AT_FDCWD, "/proc/38207/task/38207/fdinfo/15", O_RDONLY) = 16
+[pid 38207] read(16, "pos:\t446\nflags:\t0100000\nmnt_id:\t"..., 511) = 48
+[pid 38207] close(16)                   = 0
+[pid 38207] close(15)                   = 0
+[pid 38207] openat(AT_FDCWD, "/root/.dpkg.cfg", O_RDONLY) = -1 ENOENT (没有那个文件或目录)
+[pid 38207] getuid()                    = 0
+[pid 38207] setgid(0)                   = 0
+[pid 38207] close(14)                   = 0
+[pid 38207] exit_group(1)               = ?
+[pid 38207] +++ exited with 1 +++
+[pid 38206] <... wait4 resumed>[{WIFEXITED(s) && WEXITSTATUS(s) == 1}], 0, NULL) = 38207
+[pid 38206] --- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=38207, si_uid=0, si_status=1, si_utime=0, si_stime=1} ---
+[pid 38206] rt_sigreturn({mask=[]})     = 38207
+[pid 38206] wait4(-1, 0x7ffe3bf196fc, WNOHANG, NULL) = -1 ECHILD (没有子进程)
+[pid 38206] pipe2([12, 14], 0)          = 0
+[pid 38206] clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLDstrace: Process 38208 attached
+, child_tidptr=0x77ab8c71d450) = 38208
+[pid 38208] set_robust_list(0x77ab8c71d460, 24) = 0
+[pid 38206] gettid()        = 38206
+[pid 38208] gettid()        = 38208
+[pid 38206] getpid()       = 38206
+[pid 38208] getpid()       = 38208
+[pid 38206] openat(AT_FDCWD, "/proc/38206/task/38206/fdinfo/14", O_RDONLY) = 15
+[pid 38208] openat(AT_FDCWD, "/proc/38208/task/38208/fdinfo/10", O_RDONLY) = 15
+[pid 38208] read(15, "pos:\t3856\nflags:\t0100000\nmnt_id:"..., 511) = 49
+[pid 38206] read(15, "pos:\t0\nflags:\t01\nmnt_id:\t15\nino:"..., 511) = 40
+[pid 38208] close(15)        = 0
+[pid 38206] close(15)        = 0
+[pid 38208] close(10)        = 0
+[pid 38206] getpid()          = 38206
+[pid 38208] gettid()           = 38208
+[pid 38206] gettid()           = 38206
+[pid 38208] getpid()                    = 38208
+[pid 38206] readlink("/proc/38206/task/38206/fd/14", "pipe:[464810]", 256) = 13
+[pid 38208] openat(AT_FDCWD, "/proc/38208/task/38208/fdinfo/12", O_RDONLY)       = 10
+[pid 38208] read(10, "pos:\t0\nflags:\t00\nmnt_id:\t15\nino:"..., 511) = 40
+[pid 38206] getpid()       = 38206
+[pid 38208] close(10)        = 0
+[pid 38206] gettid()        = 38206
+[pid 38208] close(12)                   = 0
+[pid 38208] dup2(14, 1)         = 1
+[pid 38206] sendto(12, ">\225\0\0\0\0\0\0>\225\0\0\0\0\0\0\1\0\0\0\r\0\0\0\0\0\0\0\0\0\0\0"..., 24648, MSG_NOSIGNAL, NULL, 0)       = -1 ENOTSOCK (对非套接字进行套接字操作)
+[pid 38208] gettid( <unfinished ...>

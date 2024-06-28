@@ -11,7 +11,6 @@
 #include "com.h"
 int initIpc();
 int unInitIpc();
-int sendMsg(PCOMMON_DATA msg);
-int recvMsg(CONTROL_INFO *msg);
 int getOnoff(TRACE_POINT tp);
 int getBackwait(TRACE_POINT tp);
+void toInteractive(PCOMMON_DATA smsg,CONTROL_INFO *rmsg);

@@ -101,6 +101,7 @@ extern PCOMMON_DATA initRenameMsg(const int __oldfd, const char *__old, const in
 NHOOK_EXPORT long rename (const char *__old, const char *__new)
 {
     TRACE_POINT tp = ZyTracePointRename;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -114,9 +115,9 @@ NHOOK_EXPORT long rename (const char *__old, const char *__new)
         if(uptime()) break;
         if(!__old || !__new) break;
         if(!getOnoff(tp)) break;
-        PCOMMON_DATA data = initRenameMsg(AT_FDCWD,__old,AT_FDCWD,__new,tp);
+        data = initRenameMsg(AT_FDCWD,__old,AT_FDCWD,__new,tp);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp)) recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -130,6 +131,7 @@ NHOOK_EXPORT long renameat (int __oldfd, const char *__old, int __newfd,
                     const char *__new)
 {
     TRACE_POINT tp = ZyTracePointRenameat;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -139,9 +141,9 @@ NHOOK_EXPORT long renameat (int __oldfd, const char *__old, int __newfd,
         if(uptime()) break;
         if(!__old || !__new) break;
         if(!getOnoff(tp)) break;
-        PCOMMON_DATA data = initRenameMsg(__oldfd,__old,__newfd,__new,tp);
+        data = initRenameMsg(__oldfd,__old,__newfd,__new,tp);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp)) recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -158,6 +160,7 @@ NHOOK_EXPORT long renameat2 (int __oldfd, const char *__old, int __newfd,
     // 反之，如果flags包含RENAME_EXCHANGE，则不会删除位于newname的现有文件，相反，它将被重命名为oldname。
     // 此处不关注__flags
     TRACE_POINT tp = ZyTracePointRenameat2;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -167,9 +170,9 @@ NHOOK_EXPORT long renameat2 (int __oldfd, const char *__old, int __newfd,
         if(uptime()) break;
         if(!__old || !__new) break;
         if(!getOnoff(tp)) break;
-        PCOMMON_DATA data = initRenameMsg(__oldfd,__old,__newfd,__new,tp);
+        data = initRenameMsg(__oldfd,__old,__newfd,__new,tp);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp)) recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -183,6 +186,7 @@ NHOOK_EXPORT long renameat2 (int __oldfd, const char *__old, int __newfd,
 NHOOK_EXPORT long open(const char *path, int oflag, mode_t mode)
 {
     TRACE_POINT tp = ZyTracePointOpen;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -193,10 +197,9 @@ NHOOK_EXPORT long open(const char *path, int oflag, mode_t mode)
         if(uptime()) break;
         if(!getOnoff(tp)) break;
         if(!(O_ACCMODE&oflag)) break; //读权限打开
-        PCOMMON_DATA data = initOpenMsg(AT_FDCWD,path,tp);
+        data = initOpenMsg(AT_FDCWD,path,tp);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp))
-            recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -214,6 +217,7 @@ NHOOK_EXPORT long open64(const char *path, int oflag, mode_t mode)
      * 而在32位系统上，open64 用于明确地要求大文件支持
      */
     TRACE_POINT tp = ZyTracePointOpen;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -224,10 +228,9 @@ NHOOK_EXPORT long open64(const char *path, int oflag, mode_t mode)
         if(uptime()) break;
         if(!getOnoff(tp)) break;
         if(!(O_ACCMODE&oflag)) break;
-        PCOMMON_DATA data = initOpenMsg(AT_FDCWD,path,tp);
+        data = initOpenMsg(AT_FDCWD,path,tp);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp))
-            recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -240,6 +243,7 @@ NHOOK_EXPORT long open64(const char *path, int oflag, mode_t mode)
 NHOOK_EXPORT long openat(int __fd, const char *__file, int __oflag, .../*mode_t*/)
 {
     TRACE_POINT tp = ZyTracePointOpenat;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -255,10 +259,9 @@ NHOOK_EXPORT long openat(int __fd, const char *__file, int __oflag, .../*mode_t*
         if(uptime()) break;
         if(!getOnoff(tp)) break;
         if(!(O_ACCMODE&__oflag)) break; //读权限打开
-        PCOMMON_DATA data = initOpenMsg(__fd,__file,tp);
+        data = initOpenMsg(__fd,__file,tp);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp))
-            recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -274,6 +277,7 @@ NHOOK_EXPORT long close(int __fd)
 {
     int ret = -1;
     TRACE_POINT tp = ZyTracePointClose;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -284,10 +288,9 @@ NHOOK_EXPORT long close(int __fd)
         if(!getOnoff(tp)) break;
         int openflag = getFdOpenFlag(getpid(),mgettid(),__fd);
         if(openflag < 0 || !(O_ACCMODE&openflag)) break;
-        PCOMMON_DATA data = initCloseMsg(__fd);
+        data = initCloseMsg(__fd);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp))
-            recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL){}
@@ -295,9 +298,46 @@ NHOOK_EXPORT long close(int __fd)
     if(__fd == tGClientSocket) tGClientSocket = -1; /*使下次使用socket会被重新初始化*/
     return ret;
 }
+// 暂时先复用Close的枚举
+// dup2的newfd如果是打开的状态，那么会被自动关闭
+NHOOK_EXPORT long dup2(int oldfd, int newfd)
+{
+    int ret = -1;
+    TRACE_POINT tp = ZyTracePointClose;
+    PCOMMON_DATA data = NULL;
+    CONTROL_INFO cmsg;
+    cmsg.dec = D_ALLOW;
+    cmsg.tp = tp;
+    do
+    {
+        if(white) break;
+        if(uptime()) break;
+        if(!getOnoff(tp)) break;
+        // 如果newfd没被打开，那么此处会返回错误，然后退出
+        int openflag = getFdOpenFlag(getpid(),mgettid(),newfd);
+        if(openflag < 0 || !(O_ACCMODE&openflag)) break;
+        data = initCloseMsg(newfd);
+        if(!data) break;
+        toInteractive(data,&cmsg);
+        free(data);
+    }while(0);
+    if(cmsg.dec == D_DENIAL){}
+    ret = ToSysCall(real_dup2,__NR_dup2,-1,oldfd,newfd);
+    if(newfd == tGClientSocket) tGClientSocket = -1; /*使下次使用socket会被重新初始化*/
+    return ret;
+}
+// dup3是dup2的增强版
+// 同dup2一样newfd如果已经被打开则会自动关闭
+// flags代表的是修改被复制的oldfd的标识，有可能会涉及权限问题
+NHOOK_EXPORT long dup3(int oldfd, int newfd, int flags)
+{
+    return ToSysCall(real_dup3,__NR_dup3,-1,oldfd,newfd,flags);
+}
+
 NHOOK_EXPORT long/*FILE**/ fopen (const char * __filename, const char * __modes)
 {
     TRACE_POINT tp = ZyTracePointOpen;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -308,10 +348,9 @@ NHOOK_EXPORT long/*FILE**/ fopen (const char * __filename, const char * __modes)
         if(uptime()) break;
         if(!getOnoff(tp)) break;
         if(!strstr(__modes,"w") && !strstr(__modes,"a")) break;
-        PCOMMON_DATA data = initOpenMsg(AT_FDCWD,__filename,tp);
+        data = initOpenMsg(AT_FDCWD,__filename,tp);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp))
-            recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -324,6 +363,7 @@ NHOOK_EXPORT long/*FILE**/ fopen (const char * __filename, const char * __modes)
 NHOOK_EXPORT long/*FILE**/ freopen (const char * __filename, const char * __modes, void/*FILE*/ * __stream)
 {
     TRACE_POINT tp = ZyTracePointOpen;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -334,10 +374,9 @@ NHOOK_EXPORT long/*FILE**/ freopen (const char * __filename, const char * __mode
         if(uptime()) break;
         if(!getOnoff(tp)) break;
         if(!strstr(__modes,"w") && !strstr(__modes,"a")) break;
-        PCOMMON_DATA data = initOpenMsg(AT_FDCWD,__filename,tp);
+        data = initOpenMsg(AT_FDCWD,__filename,tp);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp))
-            recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -350,6 +389,7 @@ NHOOK_EXPORT long/*FILE**/ freopen (const char * __filename, const char * __mode
 NHOOK_EXPORT long/*FILE**/ fopen64 (const char * __filename, const char * __modes)
 {
     TRACE_POINT tp = ZyTracePointOpen;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -360,10 +400,9 @@ NHOOK_EXPORT long/*FILE**/ fopen64 (const char * __filename, const char * __mode
         if(uptime()) break;
         if(!getOnoff(tp)) break;
         if(!strstr(__modes,"w") && !strstr(__modes,"a")) break;
-        PCOMMON_DATA data = initOpenMsg(AT_FDCWD,__filename,tp);
+        data = initOpenMsg(AT_FDCWD,__filename,tp);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp))
-            recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -376,6 +415,7 @@ NHOOK_EXPORT long/*FILE**/ fopen64 (const char * __filename, const char * __mode
 NHOOK_EXPORT long/*FILE**/ freopen64 (const char * __filename, const char * __modes, void/*FILE*/ * __stream)
 {
     TRACE_POINT tp = ZyTracePointOpen;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -386,10 +426,9 @@ NHOOK_EXPORT long/*FILE**/ freopen64 (const char * __filename, const char * __mo
         if(uptime()) break;
         if(!getOnoff(tp)) break;
         if(!strstr(__modes,"w") && !strstr(__modes,"a")) break;
-        PCOMMON_DATA data = initOpenMsg(AT_FDCWD,__filename,tp);
+        data = initOpenMsg(AT_FDCWD,__filename,tp);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp))
-            recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -403,6 +442,7 @@ NHOOK_EXPORT long fclose (void *__stream)
 {
     int ret = -1;
     TRACE_POINT tp = ZyTracePointClose;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -416,10 +456,9 @@ NHOOK_EXPORT long fclose (void *__stream)
         __fd = fileno(__stream);
         int openflag = getFdOpenFlag(getpid(),mgettid(),__fd);
         if(openflag < 0 || !(O_ACCMODE&openflag)) break;
-        PCOMMON_DATA data = initCloseMsg(__fd);
+        data = initCloseMsg(__fd);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp))
-            recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL){}
@@ -443,6 +482,7 @@ struct linux_dirent64 {
 NHOOK_EXPORT long fcloseall (void)
 {
     TRACE_POINT tp = ZyTracePointClose;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
 
     int ret = 0;
@@ -476,10 +516,9 @@ NHOOK_EXPORT long fcloseall (void)
                 if(fd == tGClientSocket)   reinit = 1;
                 int openflag = getFdOpenFlag(getpid(),mgettid(),tfd);
                 if(openflag < 0 || !(O_ACCMODE&openflag)) continue; // flag错误或只读打开
-                PCOMMON_DATA data = initCloseMsg(tfd);
+                data = initCloseMsg(tfd);
                 if(!data) continue;
-                if(!sendMsg(data) && getBackwait(tp))
-                    recvMsg(&cmsg);
+                toInteractive(data,&cmsg);
                 free(data);
                 data = NULL;
             }
@@ -496,6 +535,7 @@ NHOOK_EXPORT long fcloseall (void)
 NHOOK_EXPORT long unlink(const char *__name)
 {
     TRACE_POINT tp = ZyTracePointUnlink;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -505,9 +545,9 @@ NHOOK_EXPORT long unlink(const char *__name)
         if(!__name) break;
         if(uptime()) break;
         if(!getOnoff(tp)) break;
-        PCOMMON_DATA data = initUnlinkMsg(AT_FDCWD,__name,tp);
+        data = initUnlinkMsg(AT_FDCWD,__name,tp);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp)) recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -521,6 +561,7 @@ NHOOK_EXPORT long unlink(const char *__name)
 NHOOK_EXPORT long unlinkat(int __fd, const char *__name, int __flag)
 {
     TRACE_POINT tp = ZyTracePointUnlinkat;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -530,9 +571,9 @@ NHOOK_EXPORT long unlinkat(int __fd, const char *__name, int __flag)
         if(!__name) break;
         if(uptime()) break;
         if(!getOnoff(tp)) break;
-        PCOMMON_DATA data = initUnlinkMsg(__fd,__name,tp);
+        data = initUnlinkMsg(__fd,__name,tp);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp)) recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -545,6 +586,7 @@ NHOOK_EXPORT long unlinkat(int __fd, const char *__name, int __flag)
 NHOOK_EXPORT long execve(const char *__path, char *const __argv[], char *const __envp[])
 {
     TRACE_POINT tp = ZyTracePointExecve;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -554,9 +596,9 @@ NHOOK_EXPORT long execve(const char *__path, char *const __argv[], char *const _
         if(!__path) break;
         if(uptime()) break;
         if(!getOnoff(tp)) break;
-        PCOMMON_DATA data = initExecveMsg(AT_FDCWD,__path,tp);
+        data = initExecveMsg(AT_FDCWD,__path,tp);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp)) recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -564,11 +606,19 @@ NHOOK_EXPORT long execve(const char *__path, char *const __argv[], char *const _
         errno = EPERM;  // 无权限
         return -1;
     }
+    // 此处的unInit是个容错
+    // 主要是为了防止vfork时创建的socket在返回到主进程失效的问题
+    // 1.期间子进程并未主动close该socket
+    // 2.在创建socket时，主动取消FD_CLOEXEC也未生效
+    // 3.vfork.log是在200M的日志文件中排查截取出的问题片段，片段中间并未删除任何内容
+    // 4.如果后期对性能影响较大，可以再根据日志找出详细原因
+    unInitIpc();
     return ToSysCall(real_execve,__NR_execve,-1,__path,__argv,__envp);
 }
 NHOOK_EXPORT long execveat(int __fd, const char *__path, char *const __argv[], char *const __envp[], int __flags)
 {
     TRACE_POINT tp = ZyTracePointExecveat;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -578,9 +628,9 @@ NHOOK_EXPORT long execveat(int __fd, const char *__path, char *const __argv[], c
         if(!__path) break;
         if(uptime()) break;
         if(!getOnoff(tp)) break;
-        PCOMMON_DATA data = initExecveMsg(__fd,__path,tp);
+        data = initExecveMsg(__fd,__path,tp);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp)) recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -588,11 +638,13 @@ NHOOK_EXPORT long execveat(int __fd, const char *__path, char *const __argv[], c
         errno = EPERM;  // 无权限
         return -1;
     }
+    unInitIpc();
     return ToSysCall(real_execveat,__NR_execveat,-1,__fd,__path,__argv,__envp,__flags);
 }
 NHOOK_EXPORT long fexecve(int __fd, char *const __argv[], char *const __envp[])
 {
     TRACE_POINT tp = ZyTracePointExecve;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -601,9 +653,9 @@ NHOOK_EXPORT long fexecve(int __fd, char *const __argv[], char *const __envp[])
         if(white) break;
         if(uptime()) break;
         if(!getOnoff(tp)) break;
-        PCOMMON_DATA data = initFexecveMsg(__fd);
+        data = initFexecveMsg(__fd);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp)) recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -611,11 +663,13 @@ NHOOK_EXPORT long fexecve(int __fd, char *const __argv[], char *const __envp[])
         errno = EPERM;  // 无权限
         return -1;
     }
+    unInitIpc();
     return ToSysCall(real_fexecve,-1,-1,__fd,__argv,__envp);
 }
 NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const char *param_values, const struct module *mod)
 {
     TRACE_POINT tp = ZyTracePointInitModule;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -637,9 +691,9 @@ NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const
             write(tmpFd,module_image,len);
             real_close(tmpFd);
         }
-        PCOMMON_DATA data = initModuleMsg(tmpKoPath,strlen(tmpKoPath));
+        data = initModuleMsg(tmpKoPath,strlen(tmpKoPath));
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp)) recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -652,6 +706,7 @@ NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const
 NHOOK_EXPORT long finit_module(int fd, const char *param_values,int flags)
 {
     TRACE_POINT tp = ZyTracePointFinitModule;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -660,9 +715,9 @@ NHOOK_EXPORT long finit_module(int fd, const char *param_values,int flags)
         if(white) break;
         if(uptime()) break;
         if(!getOnoff(tp)) break;
-        PCOMMON_DATA data = initFmoduleMsg(fd);
+        data = initFmoduleMsg(fd);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp)) recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -672,9 +727,11 @@ NHOOK_EXPORT long finit_module(int fd, const char *param_values,int flags)
     }
     return ToSysCall(real_finit_module,__NR_finit_module,-1,fd,param_values,flags);
 }
+
 NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
 {
     TRACE_POINT tp = ZyTracePointDeleteModule;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -684,9 +741,9 @@ NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
         if(uptime()) break;
         if(!name_user) break;
         if(!getOnoff(tp)) break;
-        PCOMMON_DATA data = initDeleteModuleMsg(name_user,strlen(name_user));
+        data = initDeleteModuleMsg(name_user,strlen(name_user));
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp)) recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
@@ -700,6 +757,7 @@ NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
 NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
 {
     TRACE_POINT tp = ZyTracePointKill;
+    PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
     cmsg.tp = tp;
@@ -716,9 +774,9 @@ NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
 
         // 此处会产生一个问题，如果用systemctl手动去停止被保护的服务，那么进程防护就会失去作用
         // 只能从execve处，获取执行systemctl的参数的形式，来分析用户、恶意程序要停止的服务
-        PCOMMON_DATA data = initKillMsg(&__pid,&__sig);
+        data = initKillMsg(&__pid,&__sig);
         if(!data) break;
-        if(!sendMsg(data) && getBackwait(tp)) recvMsg(&cmsg);
+        toInteractive(data,&cmsg);
         free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)

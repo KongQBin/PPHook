@@ -48,6 +48,12 @@
     #define SECCOMP_SET_MODE_FILTER		1
 #endif
 
+#ifndef F_GETFD
+    #define F_SETFD		2
+    #define F_GETFD		1
+    #define FD_CLOEXEC	1
+#endif
+
 extern ssize_t read (int __fd, void *__buf, size_t __n);
 extern ssize_t write (int __fd, const void *__buf, size_t __n);
 extern ssize_t readlink (const char *__restrict __path,char *__restrict __buf, size_t __len);
@@ -77,6 +83,8 @@ extern long delete_module(const char *name_user, unsigned int flags);
 extern long kill(__pid_t __pid, int __sig);
 extern long prctl(int __option, ...);
 extern long seccomp(unsigned int operation, unsigned int flags, ...);
+extern long dup2(int oldfd, int newfd);
+extern long dup3(int oldfd, int newfd, int flags);
 #pragma GCC diagnostic pop
 #define mgettid()                    real_syscall(__NR_gettid)
 #define mgetdents64(fd,addr,size)    real_syscall(__NR_getdents64,fd,addr,size)

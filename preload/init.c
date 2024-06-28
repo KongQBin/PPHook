@@ -30,7 +30,6 @@ void initSymbolAddr(void)
 
     // 文件监控及保护
     //      原始文件操作
-
     INIT_PTR(long,open,(const char *,int,mode_t));
     INIT_PTR(long,open64,(const char *,int,mode_t));
     INIT_PTR(long,openat,(int __fd, const char *__file, int __oflag, .../*mode_t*/));
@@ -40,6 +39,8 @@ void initSymbolAddr(void)
     INIT_PTR(long,renameat2,(int __oldfd, const char *__old, int __newfd,const char *__new, unsigned int __flags));
     INIT_PTR(long,unlink,(const char *__name));
     INIT_PTR(long,unlinkat,(int __fd, const char *__name, int __flag));
+    INIT_PTR(long,dup2,(int oldfd, int newfd));
+    INIT_PTR(long,dup3,(int oldfd, int newfd, int flags));
     //      F系列文件操作
     INIT_PTR(long,fopen,(const char * __filename, const char * __modes));
     INIT_PTR(long,freopen,(const char * __filename, const char * __modes, void * __stream));
