@@ -86,6 +86,8 @@ NHOOK_EXPORT long seccomp(unsigned int operation, unsigned int flags, ...)
 }
 
 extern int ignoreDir(const char* path);
+extern PCOMMON_DATA initDup2Msg(const int __fd);
+extern PCOMMON_DATA initDup3Msg(const int ofd, const int nfd);
 extern PCOMMON_DATA initCloseMsg(const int __fd);
 extern PCOMMON_DATA initFexecveMsg(const int __fd);
 extern PCOMMON_DATA initFmoduleMsg(const int __fd);
@@ -116,9 +118,7 @@ NHOOK_EXPORT long rename (const char *__old, const char *__new)
         if(!__old || !__new) break;
         if(!getOnoff(tp)) break;
         data = initRenameMsg(AT_FDCWD,__old,AT_FDCWD,__new,tp);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -142,9 +142,7 @@ NHOOK_EXPORT long renameat (int __oldfd, const char *__old, int __newfd,
         if(!__old || !__new) break;
         if(!getOnoff(tp)) break;
         data = initRenameMsg(__oldfd,__old,__newfd,__new,tp);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -171,9 +169,7 @@ NHOOK_EXPORT long renameat2 (int __oldfd, const char *__old, int __newfd,
         if(!__old || !__new) break;
         if(!getOnoff(tp)) break;
         data = initRenameMsg(__oldfd,__old,__newfd,__new,tp);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -198,9 +194,7 @@ NHOOK_EXPORT long open(const char *path, int oflag, mode_t mode)
         if(!getOnoff(tp)) break;
         if(!(O_ACCMODE&oflag)) break; //读权限打开
         data = initOpenMsg(AT_FDCWD,path,tp);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -229,9 +223,7 @@ NHOOK_EXPORT long open64(const char *path, int oflag, mode_t mode)
         if(!getOnoff(tp)) break;
         if(!(O_ACCMODE&oflag)) break;
         data = initOpenMsg(AT_FDCWD,path,tp);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -260,9 +252,7 @@ NHOOK_EXPORT long openat(int __fd, const char *__file, int __oflag, .../*mode_t*
         if(!getOnoff(tp)) break;
         if(!(O_ACCMODE&__oflag)) break; //读权限打开
         data = initOpenMsg(__fd,__file,tp);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -289,9 +279,7 @@ NHOOK_EXPORT long close(int __fd)
         int openflag = getFdOpenFlag(getpid(),mgettid(),__fd);
         if(openflag < 0 || !(O_ACCMODE&openflag)) break;
         data = initCloseMsg(__fd);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL){}
     ret = ToSysCall(real_close,__NR_close,-1,__fd);
@@ -303,7 +291,7 @@ NHOOK_EXPORT long close(int __fd)
 NHOOK_EXPORT long dup2(int oldfd, int newfd)
 {
     int ret = -1;
-    TRACE_POINT tp = ZyTracePointClose;
+    TRACE_POINT tp = ZyTracePointDup2;
     PCOMMON_DATA data = NULL;
     CONTROL_INFO cmsg;
     cmsg.dec = D_ALLOW;
@@ -316,10 +304,8 @@ NHOOK_EXPORT long dup2(int oldfd, int newfd)
         // 如果newfd没被打开，那么此处会返回错误，然后退出
         int openflag = getFdOpenFlag(getpid(),mgettid(),newfd);
         if(openflag < 0 || !(O_ACCMODE&openflag)) break;
-        data = initCloseMsg(newfd);
-        if(!data) break;
+        data = initDup2Msg(newfd);
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL){}
     ret = ToSysCall(real_dup2,__NR_dup2,-1,oldfd,newfd);
@@ -331,7 +317,37 @@ NHOOK_EXPORT long dup2(int oldfd, int newfd)
 // flags代表的是修改被复制的oldfd的标识，有可能会涉及权限问题
 NHOOK_EXPORT long dup3(int oldfd, int newfd, int flags)
 {
-    return ToSysCall(real_dup3,__NR_dup3,-1,oldfd,newfd,flags);
+    int ret = -1;
+    TRACE_POINT tp = ZyTracePointDup3;
+    PCOMMON_DATA data = NULL;
+    CONTROL_INFO cmsg;
+    cmsg.dec = D_ALLOW;
+    cmsg.tp = tp;
+    do
+    {
+        if(white) break;
+        if(uptime()) break;
+        if(!getOnoff(tp)) break;
+        // 判断哪些消息需要发往上层
+        int oflags = 1,nflags = 1;
+        // 如果newfd没被打开，那么此处会返回错误，然后退出
+        nflags = getFdOpenFlag(getpid(),mgettid(),newfd);
+        if(nflags < 0 || !(O_ACCMODE&nflags)) nflags = 0;
+        oflags = !(O_ACCMODE&flags) ? 0 : 1;
+        data = initDup3Msg(oflags?oldfd:-1,nflags?newfd:-1);
+        toInteractive(data,&cmsg);
+    }while(0);
+    if(cmsg.dec == D_DENIAL)
+    {
+        errno = EPERM;  // 无权限
+        return -1;
+    }
+    else
+    {
+        ret = ToSysCall(real_dup3,__NR_dup3,-1,oldfd,newfd,flags);
+        if(newfd == tGClientSocket) tGClientSocket = -1; /*使下次使用socket会被重新初始化*/
+        return ret;
+    }
 }
 
 NHOOK_EXPORT long/*FILE**/ fopen (const char * __filename, const char * __modes)
@@ -349,9 +365,7 @@ NHOOK_EXPORT long/*FILE**/ fopen (const char * __filename, const char * __modes)
         if(!getOnoff(tp)) break;
         if(!strstr(__modes,"w") && !strstr(__modes,"a")) break;
         data = initOpenMsg(AT_FDCWD,__filename,tp);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -375,9 +389,7 @@ NHOOK_EXPORT long/*FILE**/ freopen (const char * __filename, const char * __mode
         if(!getOnoff(tp)) break;
         if(!strstr(__modes,"w") && !strstr(__modes,"a")) break;
         data = initOpenMsg(AT_FDCWD,__filename,tp);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -401,9 +413,7 @@ NHOOK_EXPORT long/*FILE**/ fopen64 (const char * __filename, const char * __mode
         if(!getOnoff(tp)) break;
         if(!strstr(__modes,"w") && !strstr(__modes,"a")) break;
         data = initOpenMsg(AT_FDCWD,__filename,tp);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -427,9 +437,7 @@ NHOOK_EXPORT long/*FILE**/ freopen64 (const char * __filename, const char * __mo
         if(!getOnoff(tp)) break;
         if(!strstr(__modes,"w") && !strstr(__modes,"a")) break;
         data = initOpenMsg(AT_FDCWD,__filename,tp);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -457,9 +465,7 @@ NHOOK_EXPORT long fclose (void *__stream)
         int openflag = getFdOpenFlag(getpid(),mgettid(),__fd);
         if(openflag < 0 || !(O_ACCMODE&openflag)) break;
         data = initCloseMsg(__fd);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL){}
     ret = ToSysCall(real_fclose,-1,-1,__stream);
@@ -517,9 +523,7 @@ NHOOK_EXPORT long fcloseall (void)
                 int openflag = getFdOpenFlag(getpid(),mgettid(),tfd);
                 if(openflag < 0 || !(O_ACCMODE&openflag)) continue; // flag错误或只读打开
                 data = initCloseMsg(tfd);
-                if(!data) continue;
                 toInteractive(data,&cmsg);
-                free(data);
                 data = NULL;
             }
         }
@@ -546,9 +550,7 @@ NHOOK_EXPORT long unlink(const char *__name)
         if(uptime()) break;
         if(!getOnoff(tp)) break;
         data = initUnlinkMsg(AT_FDCWD,__name,tp);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -572,9 +574,7 @@ NHOOK_EXPORT long unlinkat(int __fd, const char *__name, int __flag)
         if(uptime()) break;
         if(!getOnoff(tp)) break;
         data = initUnlinkMsg(__fd,__name,tp);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -597,9 +597,7 @@ NHOOK_EXPORT long execve(const char *__path, char *const __argv[], char *const _
         if(uptime()) break;
         if(!getOnoff(tp)) break;
         data = initExecveMsg(AT_FDCWD,__path,tp);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -629,9 +627,7 @@ NHOOK_EXPORT long execveat(int __fd, const char *__path, char *const __argv[], c
         if(uptime()) break;
         if(!getOnoff(tp)) break;
         data = initExecveMsg(__fd,__path,tp);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -654,9 +650,7 @@ NHOOK_EXPORT long fexecve(int __fd, char *const __argv[], char *const __envp[])
         if(uptime()) break;
         if(!getOnoff(tp)) break;
         data = initFexecveMsg(__fd);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -692,9 +686,7 @@ NHOOK_EXPORT long init_module(const void *module_image, unsigned long len, const
             real_close(tmpFd);
         }
         data = initModuleMsg(tmpKoPath,strlen(tmpKoPath));
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -716,9 +708,7 @@ NHOOK_EXPORT long finit_module(int fd, const char *param_values,int flags)
         if(uptime()) break;
         if(!getOnoff(tp)) break;
         data = initFmoduleMsg(fd);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -742,9 +732,7 @@ NHOOK_EXPORT long delete_module(const char *name_user, unsigned int flags)
         if(!name_user) break;
         if(!getOnoff(tp)) break;
         data = initDeleteModuleMsg(name_user,strlen(name_user));
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {
@@ -775,9 +763,7 @@ NHOOK_EXPORT long kill(__pid_t __pid, int __sig)
         // 此处会产生一个问题，如果用systemctl手动去停止被保护的服务，那么进程防护就会失去作用
         // 只能从execve处，获取执行systemctl的参数的形式，来分析用户、恶意程序要停止的服务
         data = initKillMsg(&__pid,&__sig);
-        if(!data) break;
         toInteractive(data,&cmsg);
-        free(data);
     }while(0);
     if(cmsg.dec == D_DENIAL)
     {

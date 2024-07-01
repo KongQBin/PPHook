@@ -137,6 +137,46 @@ PCOMMON_DATA initCloseMsg(const int __fd)
     if(path) free(path);
     return initsucc ? common_data : NULL;
 }
+
+PCOMMON_DATA initDup2Msg(const int __fd)
+{
+    int initsucc = 0;
+    PCOMMON_DATA common_data = NULL;
+    char *path = NULL;
+    size_t pathLen = 0;
+    do
+    {
+        getFdPath(&path,&pathLen,__fd);
+        if(!path)       break;
+        common_data = initCommonData(AUTO_PID,ZyTracePointDup2,
+                                     {AT_BUF}, {path}, {pathLen});
+        initsucc = 1;
+    }while(0);
+    if(path) free(path);
+    return initsucc ? common_data : NULL;
+}
+
+PCOMMON_DATA initDup3Msg(const int ofd, const int nfd)
+{
+    int initsucc = 0;
+    PCOMMON_DATA common_data = NULL;
+    char *path = NULL, *npath = NULL;
+    size_t pathLen = 0, npathLen = 0;
+    do
+    {
+        if(ofd >= 0) getFdPath(&path,&pathLen,ofd);
+        if(nfd >= 0) getFdPath(&npath,&npathLen,ofd);
+        if(!path && !npath) break;
+        common_data = initCommonData(AUTO_PID,ZyTracePointDup3,
+                                     {AT_BUF,   AT_BUF},
+                                     {path,     npath},
+                                     {pathLen,  npathLen});
+        initsucc = 1;
+    }while(0);
+    if(path) free(path);
+    return initsucc ? common_data : NULL;
+}
+
 PCOMMON_DATA initFexecveMsg(const int __fd)
 {
     int initsucc = 0;

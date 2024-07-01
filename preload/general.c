@@ -13,7 +13,7 @@ static inline int mreadlink(char *originPath, char **targetPath, size_t *len)
         if(mlen < olen) break;
         else free(*targetPath);
     }
-    *len = mlen;
+    *len = *targetPath ? mlen : 0;
     return mlen;
 }
 

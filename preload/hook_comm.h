@@ -12,6 +12,7 @@
 
 int ignoreDir(const char* path);
 int getFdOpenFlag(pid_t gpid, pid_t pid, long fd);
+PCOMMON_DATA initDup2Msg(const int __fd);
 PCOMMON_DATA initOpenMsg(const int __fd, const char *__file, TRACE_POINT tp);
 PCOMMON_DATA initUnlinkMsg(const int __fd, const char *__name, TRACE_POINT tp);
 PCOMMON_DATA initExecveMsg(const int __fd, const char *__path, TRACE_POINT tp);

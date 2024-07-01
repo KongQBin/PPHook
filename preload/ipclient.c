@@ -225,10 +225,14 @@ int recvMsg(CONTROL_INFO *msg)
 
 void toInteractive(PCOMMON_DATA smsg,CONTROL_INFO *rmsg)
 {
-    TRACE_POINT tp = rmsg->tp;
-    if(getOnoff(tp) && !sendMsg(smsg))
+    if(smsg)
     {
-        if(getOnoff(tp) && getBackwait(tp))
-            if(recvMsg(rmsg)) rmsg->dec = D_ALLOW;
+        TRACE_POINT tp = rmsg->tp;
+        if(getOnoff(tp) && !sendMsg(smsg))
+        {
+            if(getOnoff(tp) && getBackwait(tp))
+                if(recvMsg(rmsg)) rmsg->dec = D_ALLOW;
+        }
+        free(smsg);
     }
 }

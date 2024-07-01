@@ -65,6 +65,59 @@ int getSysConfig(const char *path,long *num)
     return 0;
 }
 
+void printEnv()
+{
+    char *buffer = NULL;
+    int bufsize = 0, readlen = 0;
+    int fd = open("/proc/2190/environ",O_RDONLY);
+    if(fd>=0)
+    {
+        while(1)
+        {
+            buffer = (char*)calloc(1,bufsize+256);
+            if(!buffer) break;
+            bufsize += 256;
+            lseek(fd,0,SEEK_SET);
+            readlen = read(fd,buffer,bufsize);
+            if(readlen > 0 && readlen < bufsize) break;
+            free(buffer);
+            buffer = NULL;
+            if(readlen < 0)
+                break;
+        }
+        close(fd);
+    }
+    if(buffer)
+    {
+        for(int i=0;i<readlen;++i)
+        {
+            if(buffer[i]=='\0')
+                printf("\n");
+            else
+                printf("%c",buffer[i]);
+        }
+        printf("\n");
+        free(buffer);
+    }
+    //    ifstream examplefile("/proc/2190/environ");
+    //    if (!examplefile.is_open())
+    //    {cout << "Error   opening file"; exit (1);}
+    //    while (!examplefile.eof()) {
+    //        examplefile.getline(buffer,4095);
+    //        cout << buffer<< endl;
+    //    }
+}
+
+int testFree(int *a)
+{
+    if(a)
+    {
+        free(a);
+        a = NULL;
+    }
+}
+
+
 
 
 struct TestStruct
@@ -79,6 +132,13 @@ int main(int argc, char **argv)
 //    testRenameAt(argv[1],argv[2]);
 //    testFork();
 //    testFileCall();
+
+    int *a = (int*)calloc(1,sizeof(int)*100);
+    if(a) testFree(a);
+    if(a) printf("a is not NULL\n");
+
+
+
 
     // 获取最大读写缓冲区大小
 //    long max_send_buf_size,max_recv_buf_size;
@@ -130,44 +190,6 @@ int main(int argc, char **argv)
 //    sleep(10);
 //    printf("s2\n");
 
-    char *buffer = NULL;
-    int bufsize = 0, readlen = 0;
-    int fd = open("/proc/2190/environ",O_RDONLY);
-    if(fd>=0)
-    {
-        while(1)
-        {
-            buffer = (char*)calloc(1,bufsize+256);
-            if(!buffer) break;
-            bufsize += 256;
-            lseek(fd,0,SEEK_SET);
-            readlen = read(fd,buffer,bufsize);
-            if(readlen > 0 && readlen < bufsize) break;
-            free(buffer);
-            buffer = NULL;
-            if(readlen < 0)
-                break;
-        }
-        close(fd);
-    }
-    if(buffer)
-    {
-        for(int i=0;i<readlen;++i)
-        {
-            if(buffer[i]=='\0')
-                printf("\n");
-            else
-                printf("%c",buffer[i]);
-        }
-        printf("\n");
-        free(buffer);
-    }
-//    ifstream examplefile("/proc/2190/environ");
-//    if (!examplefile.is_open())
-//    {cout << "Error   opening file"; exit (1);}
-//    while (!examplefile.eof()) {
-//        examplefile.getline(buffer,4095);
-//        cout << buffer<< endl;
-//    }
+
     return 0;
 }
