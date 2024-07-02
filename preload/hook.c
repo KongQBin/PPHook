@@ -52,8 +52,8 @@ NHOOK_EXPORT long prctl(int __option, ...)
         argv[i] = va_arg(va_args, long);
     // PR_SET_NO_NEW_PRIVS会导致DNS缓存服务(systemd-resolved)启动失败
     // 再者，我们的hook中不需要提权，故忽略即可
-    if(/*PR_SET_NO_NEW_PRIVS != __option && */PR_GET_SECCOMP != __option
-        && PR_SET_SECCOMP != __option)
+    /*PR_SET_NO_NEW_PRIVS != __option && */
+    if(PR_GET_SECCOMP != __option && PR_SET_SECCOMP != __option)
         ret = ToSysCall(real_prctl,__NR_prctl,-1,__option,argv[0],
                         argv[1],argv[2],argv[3],argv[4],argv[5],argv[6]);
     else
@@ -73,7 +73,7 @@ NHOOK_EXPORT long seccomp(unsigned int operation, unsigned int flags, ...)
     va_start(va_args,flags);
     for(int i=0;i<sizeof(argv)/sizeof(argv[0]);++i)
         argv[i] = va_arg(va_args, long);
-    if(SECCOMP_SET_MODE_FILTER != operation)
+    if(SECCOMP_SET_MODE_FILTER != operation && SECCOMP_SET_MODE_STRICT != operation)
         ret = ToSysCall(real_seccomp,__NR_seccomp,-1,operation,flags,
                         argv[0],argv[1],argv[2],argv[3],argv[4],argv[5],argv[6]);
     else
@@ -328,9 +328,7 @@ NHOOK_EXPORT long dup3(int oldfd, int newfd, int flags)
         if(white) break;
         if(uptime()) break;
         if(!getOnoff(tp)) break;
-        // 判断哪些消息需要发往上层
         int oflags = 1,nflags = 1;
-        // 如果newfd没被打开，那么此处会返回错误，然后退出
         nflags = getFdOpenFlag(getpid(),mgettid(),newfd);
         if(nflags < 0 || !(O_ACCMODE&nflags)) nflags = 0;
         oflags = !(O_ACCMODE&flags) ? 0 : 1;

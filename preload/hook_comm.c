@@ -48,7 +48,7 @@ PCOMMON_DATA __initCommonData(initCommonDataArgvs *av)
         common_data->tp = av->tp;
         common_data->pid = av->pid;
         common_data->gpid = av->gpid;
-        for(int i=0,index=0;(i<sizeof(av->argvs)/sizeof(av->argvs[0])) && av->argvsl[i];++i)
+        for(int i=0,index=0;(i<sizeof(av->argvs)/sizeof(av->argvs[0])) && av->at[i];++i)
         {
             if(index + av->argvsl[i] > sizeof(common_data->argvs)) break;
             memcpy(common_data->argvs+index,av->argvs[i],av->argvsl[i]);
@@ -165,7 +165,7 @@ PCOMMON_DATA initDup3Msg(const int ofd, const int nfd)
     do
     {
         if(ofd >= 0) getFdPath(&path,&pathLen,ofd);
-        if(nfd >= 0) getFdPath(&npath,&npathLen,ofd);
+        if(nfd >= 0) getFdPath(&npath,&npathLen,nfd);
         if(!path && !npath) break;
         common_data = initCommonData(AUTO_PID,ZyTracePointDup3,
                                      {AT_BUF,   AT_BUF},
@@ -173,7 +173,8 @@ PCOMMON_DATA initDup3Msg(const int ofd, const int nfd)
                                      {pathLen,  npathLen});
         initsucc = 1;
     }while(0);
-    if(path) free(path);
+    if(path)  free(path);
+    if(npath) free(npath);
     return initsucc ? common_data : NULL;
 }
 
