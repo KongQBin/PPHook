@@ -158,9 +158,9 @@ int main(int argc, char **argv)
 //    ZyThread::autoRun(testFileCall);
 //    ZyThread::autoRun(testFileCall);
 
-//    FILE *fp = fopen("/home/user/MyGit/SysMonApply/PPHook/testdm/b","a+");
+//    FILE *fp = fopen("/home/kongbin/MyGit/SysMonApply/PPHook/testdm/b","a+");
 //    if(!fp) printf("fopen err is %s(%d)\n",strerror(errno),errno);
-//    int fd = open("/home/user/MyGit/SysMonApply/PPHook/testdm/a",O_CREAT|O_RDWR,0777);
+//    int fd = open("/home/kongbin/MyGit/SysMonApply/PPHook/testdm/a",O_CREAT|O_RDWR,0777);
 //    if(fd < 0) printf("open err is %s(%d)\n",strerror(errno),errno);
 //    fcloseall();
 //    int ret = write(fd,"1234\n",strlen("1234\n"));
